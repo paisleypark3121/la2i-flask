@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+</head>
+<body>
+    <div id="menu">
+        <ul>
+            <li><a href="#">USER</a>
+                <ul class="submenu">
+                    <li><a href="#">Settings</a></li>
+                    <li><a href="#" id="logout-link">Logout</a></li>
+                </ul>
+            </li>
+            <li><a href="#" id="chat-menu">CHAT</a></li>
+        </ul>
+    </div>
+
+    <div id="upload-progress" class="progress" style="display: none;">
+        <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    
+    <!-- Add a hidden CHAT section with options, file input, and URL input -->
+    <div id="chat-section" class="chat-section">
+        <h3>CHAT Options</h3>
+        <label for="chat-options">Options:</label>
+        <select id="chat-options">
+            <option value="standard">Standard</option>
+            <option value="dsa">DSA</option>
+        </select>
+        
+        <!-- Add Files or URLs -->
+        <div id="add-items-section" class="add-items-section">
+            <h3>Add Files or URLs</h3>
+            <div>
+                <label for="file-input">Choose a .txt or .pdf file:</label>
+                <input type="file" id="file-input" accept=".txt,.pdf">
+            </div>
+            <div>
+                <label for="url-input">Type the URL:</label>
+                <input type="text" id="url-input" placeholder="Type the URL">
+            </div>
+            <button id="add-button">Add</button>
+        </div>
+
+        <!-- Item List Section -->
+        <div id="item-list-section" style="display: none;">
+            <h3>Item List</h3>
+            <ul id="item-list" class="vertical-list"></ul>
+            <button id="generate-button" style="display: none;">Generate</button>
+        </div>
+
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-history" class="chat-history">
+            <!-- Chat messages will be displayed here -->
+        </div>
+        <div id="user-input">
+            <form id="chat-form">
+                <textarea id="user-message" class="user-message" placeholder="Type your message..." rows="4"></textarea>
+                <button type="submit" id="send-button">Send</button>
+            </form>
+        </div>
+    </div>
+    
+
+    <!-- Add your JavaScript code here -->
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
+</body>
+</html>

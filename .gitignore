@@ -1,0 +1,4 @@
+la2i_flask/__pycache__/
+la2i_flask/vector_store
+la2i_flask/files
+.env
