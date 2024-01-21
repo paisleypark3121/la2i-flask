@@ -1,4 +1,8 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+import os
+import base64
+from dotenv import load_dotenv
+
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 from flask_session import Session
 from auth_routes import auth_blueprint
@@ -7,10 +11,12 @@ import fitz
 from langchain.embeddings import OpenAIEmbeddings
 from utils.chat_bot_manager import ChatBotManager,system_message,get_client
 from utils.chromadb_manager import *
+from utils.MindMapGenerator import *
 #from utils.FAISS_manager import *
 
 from urllib.parse import urlparse
-from dotenv import load_dotenv
+from utils.credentials import *
+
 
 load_dotenv()
 
@@ -29,20 +35,28 @@ app.register_blueprint(auth_blueprint)  # Register the blueprint
 @app.route("/")
 def home():
     if 'user_id' in session:
-        return render_template("chat.html")
+        model = session.get("model")
+        if model is None:
+            model='gpt-3.5-turbo-0613'
+            session["model"] = model
+        return render_template("chat.html", model=model)
     else:
         return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
 
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.form.get("user_message") 
-    user_id = session.get("user_id") 
-
+    user_id = session.get("user_id")
+    model = session.get("model")
+    
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
     if user_message is None:
         return jsonify({"error": "Empty message"}), 500
-
+    if model is None:
+        model='gpt-3.5-turbo-0613'
+        session["model"] = model
+    
     messages = session.get("messages")
 
     if messages is None:
@@ -59,7 +73,10 @@ def chat():
             embedding=embeddings)
         retriever = vectordb.as_retriever()
     
-    chat_bot_manager = ChatBotManager(messages,retriever)
+    chat_bot_manager = ChatBotManager(
+        model=model,
+        messages=messages,
+        retriever=retriever)
     bot_response = chat_bot_manager.handle_message(user_message)
 
     return jsonify({"bot_response": bot_response})
@@ -218,7 +235,164 @@ def generate_chromadb():
     return jsonify({"success": True, "message": "Retriever created and stored"}), 200
 
 
+@app.route('/update_option', methods=['POST'])
+def update_option():
+    option = request.json['option']
+    if option == 'standard':
+        session["model"]='gpt-3.5-turbo-0613'
+    else:
+        session["model"]=os.environ.get('FINE_TUNED_MODEL')
+    print(session.get("model"))
+    return session.get("model")
 
+@app.route('/clear_history', methods=['POST'])
+def clear_chat_history():
+    session['messages'] = []  # Clear the chat messages in the session
+    session['retriever'] = None  # Clear the retriever information in the session
+    return jsonify(success=True)
+
+
+@app.route("/mindmap", methods=["GET", "POST"])
+def mindmap():
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    messages = session.get("messages")
+
+    if messages is None:
+        return jsonify({"error": "No messages available"}), 404
+
+    persist_directory = session.get("retriever")
+
+    retriever = None
+    if persist_directory:
+        embeddings = OpenAIEmbeddings()
+        vectordb = get_vectordb(
+            persist_directory=persist_directory,
+            embedding=embeddings)
+        retriever = vectordb.as_retriever()
+
+    last_assistant_message = None
+
+    for message in reversed(messages):
+        if message["role"] == "assistant":
+            last_assistant_message = message["content"]
+            break
+
+    if last_assistant_message is None:
+        return jsonify({"error": "No assistant message available"}), 404
+
+    print(last_assistant_message)
+    image_content = generateMindMap(text=last_assistant_message)
+
+    # Encode the image content as base64
+    encoded_image = base64.b64encode(image_content).decode("utf-8")
+    return {"image_content": encoded_image}
+
+
+@app.route("/mindmap_with_content", methods=["POST"])
+def mindmap_with_content():
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    data = request.get_json()
+
+    # Check if the 'message' key exists in the JSON data
+    if 'message' in data:
+        message = data['message']
+
+    if message is None:
+        return jsonify({"error": "No messages available"}), 404
+
+    print(message)
+    image_content = generateMindMap(text=message)
+
+    # Encode the image content as base64
+    encoded_image = base64.b64encode(image_content).decode("utf-8")
+    return {"image_content": encoded_image}
+
+
+@app.route("/credentials")
+def credentials_panel():
+    return render_template("credentials.html")
+
+# Function to check if a username exists
+def username_exists(username):
+    with open("utils/users.json", "r") as file:
+        user_data = json.load(file)
+        for user in user_data:
+            if user["username"] == username:
+                return True
+    return False
+
+@app.route("/create_user", methods=["POST"])
+def create_user():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if username_exists(username):
+        response_data = {
+            "message": "Username already exists.",
+            "status": "error"
+        }
+        return jsonify(response_data), 400  # Return JSON response with a 400 (Bad Request) status code
+    else:
+        insert_user(username, password)
+        response_data = {
+            "message": "User created successfully.",
+            "status": "success"
+        }
+        return jsonify(response_data), 200  # Return JSON response with a 200 (OK) status code
+
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
+    username = request.form.get("username")
+
+    if username_exists(username):
+        delete_myuser(username)  # Correctly pass the username as an argument
+        response_data = {
+            "message": "User deleted successfully.",
+            "status": "success"
+        }
+        return jsonify(response_data), 200  # Return JSON response with a 200 (OK) status code
+    else:
+        response_data = {
+            "message": "Username not found.",
+            "status": "error"
+        }
+        return jsonify(response_data), 404  # Return JSON response with a 404 (Not Found) status code
+
+@app.route("/test_credentials", methods=["POST"])
+def test_credentials():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if check_credentials(username, password):
+        response_data = {
+            "message": "Credentials are valid.",
+            "status": "success"
+        }
+        return jsonify(response_data), 200  # Return JSON response with a 200 (OK) status code
+    else:
+        response_data = {
+            "message": "Invalid credentials.",
+            "status": "error"
+        }
+        return jsonify(response_data), 401  # Return JSON response with a 401 (Unauthorized) status code
+
+@app.route("/list_credentials", methods=["GET"])
+def list_credentials():
+    with open("utils/users.json", "r") as file:
+        user_data = json.load(file)
+    return jsonify(user_data)
+
+@app.route("/test")
+def test():
+    return render_template("test.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -4,71 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://fonts.cdnfonts.com/css/opendyslexic" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
 </head>
 <body>
-    <div id="menu">
-        <ul>
-            <li><a href="#">USER</a>
-                <ul class="submenu">
-                    <li><a href="#">Settings</a></li>
-                    <li><a href="#" id="logout-link">Logout</a></li>
-                </ul>
-            </li>
-            <li><a href="#" id="chat-menu">CHAT</a></li>
-        </ul>
-    </div>
-
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a id="navbar-label" class="navbar-brand" href="#">
+            <img src="../static/images/logo.png" width="50" height="50" class="d-inline-block align-top" alt="Small Logo">
+            LA2I
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        USER
+                    </a>
+                    <ul class="submenu dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item text-success" href="#">Settings</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="logout-link">Logout</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-secondary" href="#" id="chat-menu">CHAT</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
     <div id="upload-progress" class="progress" style="display: none;">
         <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
+
+    <!-- Add a modal to your HTML -->
+    <div class="modal" id="loading-modal" tabindex="-1" aria-labelledby="loading-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+  
+
     
-    <!-- Add a hidden CHAT section with options, file input, and URL input -->
     <div id="chat-section" class="chat-section">
-        <h3>CHAT Options</h3>
-        <label for="chat-options">Options:</label>
-        <select id="chat-options">
-            <option value="standard">Standard</option>
-            <option value="dsa">DSA</option>
-        </select>
+        <div class="chat-options-section">
+            <label for="chat-options">CHAT Options:</label>
+            <select class="form-control" id="chat-options">
+                <option value="standard" {% if model == 'gpt-3.5-turbo-0613' %} selected {% endif %}>Standard</option>
+                <option value="dsa" {% if model != 'gpt-3.5-turbo-0613' %} selected {% endif %}>DSA</option>
+            </select>
+        </div>
         
-        <!-- Add Files or URLs -->
-        <div id="add-items-section" class="add-items-section">
-            <h3>Add Files or URLs</h3>
-            <div>
+        <div class="add-section">
+            <h6>Add Files or URLs</h6>
+            <div class="add-files-section">
                 <label for="file-input">Choose a .txt or .pdf file:</label>
-                <input type="file" id="file-input" accept=".txt,.pdf">
+                <input type="file" class="form-control" id="file-input" accept=".txt,.pdf" >
             </div>
-            <div>
+            <div class="add-url-section">
                 <label for="url-input">Type the URL:</label>
-                <input type="text" id="url-input" placeholder="Type the URL">
+                <input type="text" class="form-control" id="url-input" placeholder="Type the URL">
             </div>
-            <button id="add-button">Add</button>
+            <button class="btn btn-primary" id="add-button">Add</button>
         </div>
 
-        <!-- Item List Section -->
-        <div id="item-list-section" style="display: none;">
-            <h3>Item List</h3>
-            <ul id="item-list" class="vertical-list"></ul>
-            <button id="generate-button" style="display: none;">Generate</button>
-        </div>
-
-    </div>
-
-    <div id="chat-container">
-        <div id="chat-history" class="chat-history">
-            <!-- Chat messages will be displayed here -->
-        </div>
-        <div id="user-input">
-            <form id="chat-form">
-                <textarea id="user-message" class="user-message" placeholder="Type your message..." rows="4"></textarea>
-                <button type="submit" id="send-button">Send</button>
-            </form>
+        <div id="item-list-section" class="item-list-section">
+            <h6>Item List</h6>
+            <ul id="item-list" class="list-group vertical-list"></ul>
+            <button class="btn btn-success generate-button" id="generate-button">Generate</button>
         </div>
     </div>
     
+
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-danger mb-2" id="clear-history-button" disabled>Clear</button>
+                <button class="btn btn-success mb-2" id="save-history-button" disabled>Save</button>
+                <div id="chat-history" class="chat-history">
+                    <div id="hint-text" class="hint-text">Chat history appears here</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div id="user-input">
+                    <form id="chat-form">
+                        <div class="form-group">
+                            <textarea class="form-control" id="user-message" placeholder="Type your message..." rows="4"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="mic-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-mic" viewBox="0 0 16 16">
+                                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5"/>
+                                <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3"/>
+                            </svg>
+                        </button>                        
+                        <button type="submit" class="btn btn-primary" id="send-button">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Add your JavaScript code here -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
 </body>

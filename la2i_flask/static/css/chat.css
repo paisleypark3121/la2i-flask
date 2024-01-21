@@ -1,17 +1,37 @@
+
+* {
+    font-family: 'OpenDyslexic', sans-serif;
+    font-size: 24px;
+  }
+
 /* CSS styles for user messages */
 .user-message {
     text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #f2f2f2; /* Set a background color for user messages */
+    background-color: #cce8f4; /* Set a background color for user messages */
 }
 
 /* CSS styles for bot messages */
 .assistant-message {
-    text-align: right;
+    text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #e0e0e0; /* Set a different background color for assistant messages */
+    background-color: #eaffd9; /* Set a different background color for assistant messages */
+}
+
+.mindmap-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.text-to-speech-button {
+    height: 34px;
+}
+
+.mindmap-button {
+    margin-left: 10px;
+    height: 34px;
 }
 
 /* CSS styles for the chat history container */
@@ -27,7 +47,50 @@
 }
 
 .user-message {
-    width: 90%;
+    width: 100%;
+}
+
+.chat-options-section {
+    background-color: #f0fafe; /* Light gray background color */
+    padding: 15px;
+    border: 1px solid #ccc; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
+    margin-bottom: 20px;
+}
+
+.add-section {
+    border: 1px solid; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* CSS styles for the Add Files section */
+.add-files-section {
+    background-color: #e7f2f6;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* CSS styles for the Add URL section */
+.add-url-section {
+    background-color: #daeff7;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.item-list-section {
+    border: 1px solid; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
+    padding: 15px;
+    background-color: #cce8f3;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.generate-button {
+    display: none;
 }
 
 #menu {

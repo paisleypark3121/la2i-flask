@@ -1,13 +1,8 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
-from passlib.context import CryptContext
-from utils.password_utils import get_user, authenticate_user, hash_password, verify_password
+from utils.credentials import *
 
 
 auth_blueprint = Blueprint('auth', __name__)
-
-
-# Password hashing and verification
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # Route to render the login page
@@ -15,11 +10,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def login():
     username = request.form.get("username")
     password = request.form.get("password")
-    user = authenticate_user(username, password)
+    #user = authenticate_user(username, password)
+    user=check_credentials(username, password)
 
     if user:
         # Set the user's session cookie upon successful login
-        session['user_id'] = user['username']
+        session['user_id'] = username
         return redirect(url_for('home'))
     else:
         return jsonify({"error": "Incorrect username or password"}), 400

@@ -45,14 +45,14 @@ def get_client():
 
 class ChatBotManager:
 
-    def __init__(self, messages, retriever=None):
+    def __init__(self, model, messages, retriever=None):
         self.rolling = rolling
         self.messages = messages
 
         self.system_message=system_message
         self.client = OpenAI()
         self.embeddings = OpenAIEmbeddings()
-        self.model = "gpt-3.5-turbo-0613"
+        self.model = model
         self.temperature = 0
         self.retriever=retriever
         
@@ -67,14 +67,14 @@ class ChatBotManager:
         
         #bot_response = "This is a fake bot response: "+user_message
         response = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages,
-                temperature=self.temperature,
-                max_tokens=400,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
+            model=self.model,
+            messages=self.messages,
+            temperature=self.temperature,
+            max_tokens=400,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
 
         answer=response.choices[0].message.content
 
