@@ -1,7 +1,7 @@
 import json
 
 def check_credentials(username, password):
-    with open("utils/users.json", "r") as file:
+    with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
         for user in user_data:
             if user["username"] == username and user["password"] == password:
@@ -11,7 +11,7 @@ def check_credentials(username, password):
 # Function to insert or update a user in the "users.json" file
 def insert_user(username, password):
     # Read the existing user data from the file
-    with open("utils/users.json", "r") as file:
+    with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
     
     # Check if the username already exists
@@ -28,7 +28,7 @@ def insert_user(username, password):
     user_data.append(new_user)
 
     # Write the updated user data back to the file
-    with open("utils/users.json", "w") as file:
+    with open("utilities/users.json", "w") as file:
         json.dump(user_data, file, indent=4)
 
     print(f"User '{username}' has been successfully inserted.")
@@ -37,7 +37,7 @@ def insert_user(username, password):
 def delete_myuser(username):
 
     # Read the existing user data from the file
-    with open("utils/users.json", "r") as file:
+    with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
     
     # Check if the username exists in the user data
@@ -50,7 +50,7 @@ def delete_myuser(username):
 
     if found:
         # Write the updated user data (with the user removed) back to the file
-        with open("utils/users.json", "w") as file:
+        with open("utilities/users.json", "w") as file:
             json.dump(user_data, file, indent=4)
         print(f"User '{username}' has been successfully deleted.")
     else:

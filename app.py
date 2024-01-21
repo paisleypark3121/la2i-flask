@@ -9,13 +9,13 @@ from auth_routes import auth_blueprint
 import fitz
 
 from langchain.embeddings import OpenAIEmbeddings
-from utils.chat_bot_manager import ChatBotManager,system_message,get_client
-from utils.chromadb_manager import *
-from utils.MindMapGenerator import *
-#from utils.FAISS_manager import *
+from utilities.chat_bot_manager import ChatBotManager,system_message,get_client
+from utilities.chromadb_manager import *
+from utilities.MindMapGenerator import *
+#from utilities.FAISS_manager import *
 
 from urllib.parse import urlparse
-from utils.credentials import *
+from utilities.credentials import *
 
 
 load_dotenv()
@@ -322,7 +322,7 @@ def credentials_panel():
 
 # Function to check if a username exists
 def username_exists(username):
-    with open("utils/users.json", "r") as file:
+    with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
         for user in user_data:
             if user["username"] == username:
@@ -386,7 +386,7 @@ def test_credentials():
 
 @app.route("/list_credentials", methods=["GET"])
 def list_credentials():
-    with open("utils/users.json", "r") as file:
+    with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
     return jsonify(user_data)
 

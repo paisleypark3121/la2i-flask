@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
-from utils.credentials import *
+from utilities.credentials import *
 
 
 auth_blueprint = Blueprint('auth', __name__)
