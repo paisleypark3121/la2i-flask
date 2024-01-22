@@ -1,49 +1,10 @@
-
 // JavaScript code to handle chat interactions
 document.addEventListener("DOMContentLoaded", function () {
-
-    var model = "{{ model }}";
-
-    // Find the <a> element by its id
-    var navbarLabel = document.getElementById("navbar-label");
-
-    // Update the label based on the selected model
-    if (model === 'gpt-3.5-turbo-0613') {
-        navbarLabel.textContent = "LA2I";
-        navbarLabel.style.color = "black";
-    } else {
-        navbarLabel.textContent = "LA2I*";
-        navbarLabel.style.color = "red";
-    }
-
-    const chatForm = document.getElementById("chat-form");
-    const userMessageInput = document.getElementById("user-message");
-    const navbar = document.getElementById("navbarNav");
-    const chatSection = document.getElementById("chat-section");
-    const clearHistoryButton = document.getElementById("clear-history-button");
-    const saveHistoryButton = document.getElementById("save-history-button");
-
+    
     // Add event listener for clearing chat history
-    clearHistoryButton.addEventListener("click", () => {
-        fetch("/clear_history", {
-            method: "POST",
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            // Handle the response if needed
-            clearHistory();
-        });
-    });
-
-    // Add event listener for saving chat history as PDF
-    saveHistoryButton.addEventListener("click", () => {
-        saveChatHistoryAsPDF();
-    });
-
-    // Function to clear chat history
     function clearHistory() {
         const chatHistory = document.getElementById("chat-history");
-        chatHistory.innerHTML = ""; // Clear the chat history on the page
+        chatHistory.innerHTML = ""; 
 
         const itemList = document.getElementById("item-list");
         itemList.innerHTML = "";
@@ -63,8 +24,35 @@ document.addEventListener("DOMContentLoaded", function () {
         hintElement.className = "hint-text";
         hintElement.textContent = "Chat history appears here";
         chatHistory.appendChild(hintElement);
+
+        // const contentLoadedMessage = document.getElementById("content-loaded-message");
+        // contentLoadedMessage.style.display = "none";
+        const contentLoadedContainer = document.getElementById("content-loaded-container");
+        contentLoadedContainer.style.display = "none";
     }
-  
+
+    const clearHistoryButton = document.getElementById("clear-history-button");
+    
+    clearHistoryButton.addEventListener("click", () => {
+        const confirmed = window.confirm("Are you sure you want to clear the history?");
+        if (confirmed) {
+            fetch("/clear_history", {
+                method: "POST",
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                // Handle the response if needed
+                clearHistory();
+            });
+        }
+    });
+
+    // Add event listener for saving chat history as PDF
+    const saveHistoryButton = document.getElementById("save-history-button");
+    saveHistoryButton.addEventListener("click", () => {
+        saveChatHistoryAsPDF();
+    });
+    
     async function saveChatHistoryAsPDF() {
         window.jsPDF = window.jspdf.jsPDF;
 
@@ -193,12 +181,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Listen for the Bootstrap navbar collapse event
+    const navbar = document.getElementById("navbarNav");
+    const chatSection = document.getElementById("chat-section");
     navbar.addEventListener("hidden.bs.collapse", function () {
         if (chatSection.style.display !== "none") {
             chatSection.style.display = "none";
         }
     });
 
+    const userMessageInput = document.getElementById("user-message");
     userMessageInput.addEventListener("keydown", function (e) {
         if (e.ctrlKey && e.key === "Enter") {
             e.preventDefault(); // Prevent the default behavior (newline in textarea)
@@ -206,6 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    const chatForm = document.getElementById("chat-form");
     chatForm.addEventListener("submit", function (e) {
         e.preventDefault();
 
@@ -429,6 +421,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    const stickyButton = document.getElementById("sticky-button");
+    stickyButton.addEventListener("click", async () => {        
+            
+        // Show the loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+        loadingModal.show();
+
+        await fetch("/get_summary", {
+            method: "GET",
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            // Handle the server response and display it in the chat history
+            const botResponse = data.bot_response;
+            appendMessage("Assistant", botResponse); // Display the bot's response
+        })
+        .catch((error) => {
+            console.error("Error sending message:", error);
+        })
+        .finally(()=> {
+            loadingModal.hide();
+        });
+    });
+
     // Get references to HTML elements
     const fileInput = document.getElementById("file-input");
     const urlInput = document.getElementById("url-input");
@@ -441,7 +457,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const items = [];
 
     addButton.addEventListener("click", function (e) {
-        e.preventDefault(); // Prevent form submission
+        e.preventDefault();
     
         const file = fileInput.files[0]; // Get the selected file
         const url = urlInput.value.trim();
@@ -611,6 +627,10 @@ document.addEventListener("DOMContentLoaded", function () {
             itemsToSend.push({ item: itemText, type: itemType }); // Add both item and type
         }
 
+        // Show the loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+        loadingModal.show();
+        
         // Send the list of items to the server
         fetch("/generate_chromadb", {
             method: "POST",
@@ -624,12 +644,20 @@ document.addEventListener("DOMContentLoaded", function () {
             // Handle the server response (e.g., display a success message)
             if (data.success) {
                 console.log("ChromaDB generation completed.");
+                // Make the content-loaded message div visible
+                // const contentLoadedMessage = document.getElementById("content-loaded-message");
+                // contentLoadedMessage.style.display = "block";
+                const contentLoadedContainer = document.getElementById("content-loaded-container");
+                contentLoadedContainer.style.display = "block";
             } else {
                 console.error("ChromaDB generation failed.");
             }
         })
         .catch((error) => {
             console.error("Error generating ChromaDB:", error);
+        })
+        .finally(()=> {
+            loadingModal.hide();
         });
     });
 
@@ -722,6 +750,7 @@ var chatOptionsSelect = document.getElementById("chat-options");
 
 // Aggiungi un evento di cambio all'elemento select
 chatOptionsSelect.addEventListener("change", function() {
+    //console.log("CHANGE")
     // Ottieni il valore dell'opzione selezionata
     var selectedValue = chatOptionsSelect.value;
 

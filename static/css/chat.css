@@ -46,6 +46,22 @@
     display: none;
 }
 
+.content-loaded-container {
+    display: none;
+    text-align: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* .content-loaded-message {
+    display: none;
+    text-align: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+} */
+
 .user-message {
     width: 100%;
 }

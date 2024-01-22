@@ -13,6 +13,7 @@ from utilities.chat_bot_manager import ChatBotManager,system_message,get_client
 from utilities.chromadb_manager import *
 from utilities.MindMapGenerator import *
 #from utilities.FAISS_manager import *
+from utilities.summarize_manager import *
 
 from urllib.parse import urlparse
 from utilities.credentials import *
@@ -39,6 +40,8 @@ def home():
         if model is None:
             model='gpt-3.5-turbo-0613'
             session["model"] = model
+        print("HOME")
+        print(model)
         return render_template("chat.html", model=model)
     else:
         return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
@@ -48,7 +51,7 @@ def chat():
     user_message = request.form.get("user_message") 
     user_id = session.get("user_id")
     model = session.get("model")
-    
+
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
     if user_message is None:
@@ -316,6 +319,37 @@ def mindmap_with_content():
     return {"image_content": encoded_image}
 
 
+
+@app.route("/get_summary", methods=["GET"])
+def get_summary():
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    persist_directory = session.get("retriever")
+    if persist_directory is None:
+        return None
+
+    retriever = None
+    embeddings = OpenAIEmbeddings()
+    vectordb = get_vectordb(
+        persist_directory=persist_directory,
+        embedding=embeddings)
+
+    if vectordb is None:
+        return None
+
+    retriever = vectordb.as_retriever()
+
+    bot_response=summarize(embeddings, vectordb)
+    if bot_response is None:
+        return None
+    
+    #bot_response=generateMindMap_context(summary)
+
+    return jsonify({"bot_response": bot_response})
+
 @app.route("/credentials")
 def credentials_panel():
     return render_template("credentials.html")
@@ -395,4 +429,5 @@ def test():
     return render_template("test.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    #app.run(debug=True)
+    app.run("0.0.0.0")

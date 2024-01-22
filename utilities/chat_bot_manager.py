@@ -54,7 +54,7 @@ class ChatBotManager:
         self.embeddings = OpenAIEmbeddings()
         self.model = model
         self.temperature = 0
-        self.retriever=retriever
+        self.retriever = retriever
         
     def handle_message(self, user_message):
         self.messages.append({"role": "user", "content": user_message})
@@ -81,4 +81,3 @@ class ChatBotManager:
         self.messages.append({"role": "assistant", "content": answer})
         self.messages = set_messages(self.messages,self.rolling)
         return answer
-

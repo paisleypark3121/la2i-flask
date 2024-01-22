@@ -23,3 +23,7 @@ if __name__ == '__main__':
 
 Then run like this:
 poetry run python app.py
+
+BEWARE:
+- in order to have the application open automatically the webview use app.run(0.0.0.0)
+- in order to enable python folder scaffolding put __init__.py file (it can be empty) in any folder that contains python file
