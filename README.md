@@ -27,3 +27,9 @@ poetry run python app.py
 BEWARE:
 - in order to have the application open automatically the webview use app.run(0.0.0.0)
 - in order to enable python folder scaffolding put __init__.py file (it can be empty) in any folder that contains python file
+
+.REPLIT 
+- change the entrypoint -> entrypoint = "app.py"
+- change the run - > run = ["python3", "app.py"]
+
+when deploying, the run command must be: python3 app.py
