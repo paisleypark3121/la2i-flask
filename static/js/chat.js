@@ -262,9 +262,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const mmButton = document.createElement("button");
         mmButton.className = "btn btn-primary mindmap-button";
         const svg_mm_HTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-share-fill" viewBox="0 0 16 48">
-            <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5"/>
-          </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-2-fill" viewBox="0 0 16 48">
+            <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zm-3 8A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 9 12.5z"/>
+        </svg>
         `;
         mmButton.innerHTML = svg_mm_HTML;
 
@@ -286,7 +286,63 @@ document.addEventListener("DOMContentLoaded", function () {
                     headers: {
                         "Content-Type": "application/json", // Set the appropriate content type
                     },
-                    body: JSON.stringify({ message: messageContent }), // Send the message content as JSON data
+                    body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
+                });
+        
+                if (response.ok) {
+                    const data = await response.json();
+                    const encodedImage = data.image_content;
+        
+                    // Create a new image element
+                    const mindmapImage = document.createElement("img");
+                    mindmapImage.classList.add("mindmap-image");
+                    mindmapImage.src = "data:image/png;base64," + encodedImage;
+                    mindmapImage.alt = "Mind Map Image";
+        
+                    // Append the image element to the chat-history div
+                    const chatHistoryDiv = document.getElementById("chat-history");
+                    chatHistoryDiv.appendChild(mindmapImage);
+
+                } else {
+                    // Handle error
+                    console.error("Error fetching mind map image");
+                }
+            } catch (error) {
+                console.error("An error occurred:", error);
+            } finally {
+                // Hide the loading modal after the response is received or an error occurs
+                loadingModal.hide();
+            }
+        });
+
+        const mm2Button = document.createElement("button");
+        mm2Button.className = "btn btn-primary mindmap-button";
+        const svg_mm2_HTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-3-fill" viewBox="0 0 16 48">
+            <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zm-6 8A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm6 0A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>
+        </svg>
+        `;
+        mm2Button.innerHTML = svg_mm2_HTML;
+
+        mm2Button.addEventListener("click", async () => {
+
+            const parentDiv = mmButton.closest(".assistant-message");
+
+            // Get the textual content from the parent div
+            const messageContent = parentDiv.textContent.trim();
+
+            // Show the loading modal
+            const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+            loadingModal.show();
+        
+            try {
+                // Make a fetch request to your mind map image endpoint
+                const response = await fetch("/mindmap_with_content", {
+                    method: "POST", // Assuming you want to send the message content as a POST request
+                    headers: {
+                        "Content-Type": "application/json", // Set the appropriate content type
+                    },
+                    body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
                 });
         
                 if (response.ok) {
@@ -368,6 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
             messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
             messageElement.appendChild(ttsButton);
             messageElement.appendChild(mmButton);
+            messageElement.appendChild(mm2Button);
             
         } else {
             messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;

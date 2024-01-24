@@ -2,7 +2,7 @@ import os
 import base64
 from dotenv import load_dotenv
 
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash, send_file
 from datetime import datetime, timedelta
 from flask_session import Session
 from auth_routes import auth_blueprint
@@ -347,15 +347,18 @@ def mindmap_with_content():
 
     data = request.get_json()
 
-    # Check if the 'message' key exists in the JSON data
     if 'message' in data:
         message = data['message']
-
     if message is None:
         return jsonify({"error": "No messages available"}), 404
-
     print(message)
-    image_content = generateMindMap(language=language,text=message)
+
+    type='small'
+    if 'type' in data:
+        type = data['type']
+    print(type)
+
+    image_content = generateMindMap(language=language,type=type,text=message)
 
     # Encode the image content as base64
     encoded_image = base64.b64encode(image_content).decode("utf-8")
@@ -474,6 +477,29 @@ def list_credentials():
     with open("utilities/users.json", "r") as file:
         user_data = json.load(file)
     return jsonify(user_data)
+
+@app.route('/list')
+def list_files():
+    files = os.listdir('./files/')
+    files_text = '<br>'.join(files)
+    return files_text
+
+@app.route('/show/<filename>')
+def show(filename):
+    try:
+        file_path = os.path.join('./files/', filename)
+
+        print(file_path)
+
+        # Check if the file exists
+        if os.path.exists(file_path):
+            
+            return send_file(file_path)
+        else:
+            return "File not found", 404
+    except FileNotFoundError:
+        # Handle file not found error
+        abort(404)
 
 @app.route("/test")
 def test():

@@ -140,19 +140,25 @@ nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_siz
 coded mind map:"""
 
 
-def generateMindMap(language,text,temperature=0,model_name='gpt-4-0613'):
+def generateMindMap(language,type,text,temperature=0,model_name='gpt-4-0613'):
 
     #print(model_name)
-
-    template_dialogue=template_dialogue_en
     if language=='italian':
-        template_dialogue=template_dialogue_it
+        if type=='small':
+            template=template_dialogue_it
+        else:
+            template=template_context_it
+    else:
+        if type=='small':
+            template=template_dialogue_en
+        else:
+            template=template_context_en
 
     messages=[]
     messages.append(
         {
         "role": "system",
-        "content": template_dialogue
+        "content": template
         }
     )
 
@@ -183,6 +189,8 @@ def generateMindMap(language,text,temperature=0,model_name='gpt-4-0613'):
     last2 = timestamp % 100
     suffix = str(last2)
 
+    print(answer)
+    
     exec(answer)
     image_bytes_io = BytesIO()
     plt.savefig(image_bytes_io, format="png")
@@ -203,84 +211,85 @@ def generateMindMap(language,text,temperature=0,model_name='gpt-4-0613'):
 
     #return file_name  
 
-def generateMindMap_context(text,temperature=0,model_name='gpt-4-0613'):
 
-    #print(model_name)
+# def generateMindMap_context(text,temperature=0,model_name='gpt-4-0613'):
 
-    messages=[]
-    messages.append(
-        {
-        "role": "system",
-        "content": template_context_en
-        }
-    )
+#     #print(model_name)
 
-    user_content="{context} "+text;
-    messages.append(
-        {
-            "role":"user",
-            "content": user_content
-        }
-    )
+#     messages=[]
+#     messages.append(
+#         {
+#         "role": "system",
+#         "content": template_context_en
+#         }
+#     )
 
-    #print(messages)
+#     user_content="{context} "+text;
+#     messages.append(
+#         {
+#             "role":"user",
+#             "content": user_content
+#         }
+#     )
 
-    client=OpenAI()
+#     #print(messages)
+
+#     client=OpenAI()
     
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=messages,
-        temperature=0,
-        max_tokens=2000,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
-    answer=response.choices[0].message.content
+#     response = client.chat.completions.create(
+#         model=model_name,
+#         messages=messages,
+#         temperature=0,
+#         max_tokens=2000,
+#         top_p=1,
+#         frequency_penalty=0,
+#         presence_penalty=0
+#     )
+#     answer=response.choices[0].message.content
 
-    timestamp = int(time.time())
-    last2 = timestamp % 100
-    suffix = str(last2)
+#     timestamp = int(time.time())
+#     last2 = timestamp % 100
+#     suffix = str(last2)
 
-    exec(answer)
-    image_bytes_io = BytesIO()
-    plt.savefig(image_bytes_io, format="png")
-    image_bytes_io.seek(0)
-    image_content = image_bytes_io.read()
-    image_bytes_io.close()
+#     exec(answer)
+#     image_bytes_io = BytesIO()
+#     plt.savefig(image_bytes_io, format="png")
+#     image_bytes_io.seek(0)
+#     image_content = image_bytes_io.read()
+#     image_bytes_io.close()
 
-    return image_content
+#     return image_content
 
-    # file_name=name+"_"+suffix+".png"
-    # answer=answer+"\nfigure.savefig(\""+file_name+"\")"
+#     # file_name=name+"_"+suffix+".png"
+#     # answer=answer+"\nfigure.savefig(\""+file_name+"\")"
 
-    # answer = answer.replace("figure", "fig" + suffix)\
-    #     .replace("axx", "ax" + suffix)
+#     # answer = answer.replace("figure", "fig" + suffix)\
+#     #     .replace("axx", "ax" + suffix)
     
-    #print(answer)
-    #exec(answer)
+#     #print(answer)
+#     #exec(answer)
 
-    #return file_name  
+#     #return file_name  
 
-def test():
-    from dotenv import load_dotenv
-    load_dotenv()
+# def test():
+#     from dotenv import load_dotenv
+#     load_dotenv()
 
-    name="atom"
-    text="i need a Mind Map for the topic: "+name
-    response=generateMindMap_mono_topic(name,text)
-    print(response)
+#     name="atom"
+#     text="i need a Mind Map for the topic: "+name
+#     response=generateMindMap_mono_topic(name,text)
+#     print(response)
 
-    # name="solar system"
-    # text="i need a Mind Map for the topic: "+name
-    # response=generateMindMap_mono_topic(name,text)
-    # print(response)
+#     # name="solar system"
+#     # text="i need a Mind Map for the topic: "+name
+#     # response=generateMindMap_mono_topic(name,text)
+#     # print(response)
 
-    # name="atom"
-    # text="An atom is the basic unit of matter, consisting of a nucleus at its center, composed of positively charged protons and uncharged neutrons. Negatively charged electrons orbit the nucleus in shells or energy levels. The number of protons in the nucleus determines an element's identity and its chemical properties, while the overall number of electrons balances the positive charge of the protons, making the atom electrically neutral.Atoms are the building blocks of all chemical elements and are crucial to understanding the structure and behavior of matter in the universe."
-    # response=generateMindMap_mono_topic(name,text)
-    # full_response=response+"\nplt.savefig(\""+name+".png\")"
-    # #print(full_response)
-    # exec(full_response)
+#     # name="atom"
+#     # text="An atom is the basic unit of matter, consisting of a nucleus at its center, composed of positively charged protons and uncharged neutrons. Negatively charged electrons orbit the nucleus in shells or energy levels. The number of protons in the nucleus determines an element's identity and its chemical properties, while the overall number of electrons balances the positive charge of the protons, making the atom electrically neutral.Atoms are the building blocks of all chemical elements and are crucial to understanding the structure and behavior of matter in the universe."
+#     # response=generateMindMap_mono_topic(name,text)
+#     # full_response=response+"\nplt.savefig(\""+name+".png\")"
+#     # #print(full_response)
+#     # exec(full_response)
 
 #test()
