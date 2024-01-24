@@ -103,7 +103,12 @@ def get_youtube_transcript(url, language_code="en", iteration=0):
 # content=get_youtube_transcript(url)
 # print(content[0:100])
 
-def create_vectordb(location, embedding, persist_directory=None):
+def create_vectordb(
+    location, 
+    embedding, 
+    persist_directory=None, 
+    chunk_size=1200, 
+    chunk_overlap=200):
 
     if location.startswith("http"):
         if location.endswith(".txt"):
@@ -125,13 +130,13 @@ def create_vectordb(location, embedding, persist_directory=None):
     if content is None:
         return None
 
-    if len(content) < 5000:
-        chunk_size = 500
-        chunk_overlap = 50
-    else:
-        # Use the default values when the length is not smaller than 5000
-        chunk_size = 1200
-        chunk_overlap = 200
+    # if len(content) < 5000:
+    #     chunk_size = 500
+    #     chunk_overlap = 50
+    # else:
+    #     # Use the default values when the length is not smaller than 5000
+    #     chunk_size = 1200
+    #     chunk_overlap = 200
         
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -146,7 +151,7 @@ def create_vectordb(location, embedding, persist_directory=None):
         vectordb=get_vectordb(persist_directory,embedding)
         if vectordb:
             vectordb.delete_collection()
-            print("collection deleted")
+            print("collection deleted in "+persist_directory)
 
         vectordb=Chroma.from_documents(
             documents=splits, 
@@ -167,20 +172,17 @@ def create_vectordb(location, embedding, persist_directory=None):
         print(error)
         return None
 
-def create_vectordb_from_content(content, embedding, persist_directory):
+def create_vectordb_from_content(
+    content, 
+    embedding, 
+    persist_directory,
+    chunk_size=1200, 
+    chunk_overlap=200):
     
     if content is None:
         error="None content"
         response_data = {"success": False, "message": error}
         return json.dumps(response_data)
-
-    if len(content) < 5000:
-        chunk_size = 500
-        chunk_overlap = 50
-    else:
-        # Use the default values when the length is not smaller than 5000
-        chunk_size = 1200
-        chunk_overlap = 200
         
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,

@@ -33,13 +33,16 @@ Session(app)
 
 app.register_blueprint(auth_blueprint)  # Register the blueprint
 
+#default_model='gpt-3.5-turbo-0613'
+default_model='gpt-4-0613'
+
 @app.route("/")
 def home():
     if 'user_id' in session:
         model = session.get("model")
         language = session.get("language")
         if model is None:
-            model = 'gpt-3.5-turbo-0613'
+            model = default_model
             session["model"] = model
         if language is None:
             language = 'english'
@@ -64,7 +67,7 @@ def chat():
     if user_message is None:
         return jsonify({"error": "Empty message"}), 500
     if model is None:
-        model='gpt-3.5-turbo-0613'
+        model=default_model
         session["model"] = model
     if language is None:
         language='english'
@@ -82,18 +85,20 @@ def chat():
     persist_directory=session.get("retriever")
 
     retriever=None
+    vectordb=None
     if persist_directory:
         embeddings=OpenAIEmbeddings()
         vectordb=get_vectordb(
             persist_directory=persist_directory,
             embedding=embeddings)
-        retriever = vectordb.as_retriever()
+        #retriever = vectordb.as_retriever()
     
     chat_bot_manager = ChatBotManager(
         language=language,
         model=model,
         messages=messages,
-        retriever=retriever)
+        vectordb=vectordb)
+        #retriever=retriever)
     bot_response = chat_bot_manager.handle_message(user_message)
 
     return jsonify({"bot_response": bot_response})
@@ -260,9 +265,15 @@ def generate_chromadb():
 def update_option():
     option = request.json['option']
     if option == 'standard':
-        session["model"]='gpt-3.5-turbo-0613'
+        session["model"]=default_model
     else:
+        language = session.get("language")
+        if language is None:
+            language = 'english'
+            session["language"] = language
         session["model"]=os.environ.get('FINE_TUNED_MODEL')
+        if language=="italian":
+            session["model"]=os.environ.get('FINE_TUNED_MODEL_IT')
     print(session.get("model"))
     return session.get("model")
 
@@ -378,7 +389,11 @@ def get_summary():
 
     #retriever = vectordb.as_retriever()
 
-    bot_response=summarize(language=language,embeddings=embeddings, vectordb=vectordb)
+    bot_response=summarize(
+        language=language,
+        model=default_model,
+        embeddings=embeddings, 
+        vectordb=vectordb)
     if bot_response is None:
         return None
     

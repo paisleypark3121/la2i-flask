@@ -33,7 +33,7 @@ system_message_it="Il tuo ruolo è essere un assistente disponibile con un tono 
     "se non riesci a recuperare alcuna informazione dal [context], usa le tue conoscenze "\
     "[context] {context}"
 
-rolling = 5
+rolling = 10
 
 def set_messages(messages, rolling):
     num_entries = len(messages)
@@ -61,7 +61,7 @@ def get_client():
 
 class ChatBotManager:
 
-    def __init__(self, language, model, messages, retriever=None):
+    def __init__(self, language, model, messages, vectordb=None):
         self.rolling = rolling
         self.messages = messages
 
@@ -73,15 +73,20 @@ class ChatBotManager:
         self.embeddings = OpenAIEmbeddings()
         self.model = model
         self.temperature = 0
-        self.retriever = retriever
+        self.vectordb = vectordb
         
     def handle_message(self, user_message):
         self.messages.append({"role": "user", "content": user_message})
         
-        if self.retriever:
-            docs=self.retriever.get_relevant_documents(user_message)
-            #print(docs[0])
-            updated_system_message=self.system_message.replace("{context}", docs[0].page_content)
+        # if self.retriever:
+        #     docs=self.retriever.get_relevant_documents(user_message)
+        #     #print(docs[0])
+        #     updated_system_message=self.system_message.replace("{context}", docs[0].page_content)
+        #     self.messages[0]["content"]=updated_system_message
+        if self.vectordb:
+            docs=self.vectordb.similarity_search_with_relevance_scores(user_message)
+            result=docs[0][0].page_content+"\n\n"+docs[1][0].page_content
+            updated_system_message=self.system_message.replace("{context}", result)
             self.messages[0]["content"]=updated_system_message
         
         #bot_response = "This is a fake bot response: "+user_message

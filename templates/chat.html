@@ -17,11 +17,12 @@
         </a> -->
         <a id="navbar-label" class="navbar-brand" href="#">
             <img src="../static/images/logo.png" width="50" height="50" class="d-inline-block align-top" alt="Small Logo">
-            {% if model == 'gpt-3.5-turbo-0613' %}
+            {% if "personal" not in model %}
                 <span style="color: black;">LA2I</span>
             {% else %}
                 <span style="color: red;">LA2I*</span>
             {% endif %}
+
         </a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,8 +84,8 @@
         <div class="chat-options-section">
             <label for="chat-options">CHAT Options:</label>
             <select class="form-control" id="chat-options">
-                <option value="standard" {% if model == 'gpt-3.5-turbo-0613' %} selected {% endif %}>Standard</option>
-                <option value="dsa" {% if model != 'gpt-3.5-turbo-0613' %} selected {% endif %}>DSA</option>
+                <option value="standard" {% if "personal" not in model %} selected {% endif %}>Standard</option>
+                <option value="dsa" {% if "personal" in model %} selected {% endif %}>DSA</option>
             </select>
         </div>
         

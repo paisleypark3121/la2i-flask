@@ -7,8 +7,7 @@ from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
 
 
-def summarize(language,embeddings, vectordb):
-    model='gpt-3.5-turbo-0613'
+def summarize(language,model,embeddings, vectordb):
     temperature=0
     llm = ChatOpenAI(model=model,temperature=0)
 
