@@ -182,10 +182,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Listen for the Bootstrap navbar collapse event
     const navbar = document.getElementById("navbarNav");
+    const settingSection = document.getElementById("setting-section");
     const chatSection = document.getElementById("chat-section");
     navbar.addEventListener("hidden.bs.collapse", function () {
         if (chatSection.style.display !== "none") {
             chatSection.style.display = "none";
+        }
+        if (settingSection.style.display !== "none") {
+            settingSection.style.display = "none";
         }
     });
 
@@ -745,6 +749,16 @@ document.getElementById("chat-menu").addEventListener("click", function () {
     }
 });
 
+// Add an event listener for the "CHAT" menu item
+document.getElementById("settings-menu").addEventListener("click", function () {
+    const settingSection = document.getElementById("setting-section");
+    if (settingSection.style.display === "none" || settingSection.style.display === "") {
+        settingSection.style.display = "block"; // Show the section
+    } else {
+        settingSection.style.display = "none"; // Hide the section
+    }
+});
+
 // Ottieni l'elemento select
 var chatOptionsSelect = document.getElementById("chat-options");
 
@@ -765,30 +779,67 @@ chatOptionsSelect.addEventListener("change", function() {
 
     // Esegui la richiesta Fetch
     fetch("/update_option", requestOptions)
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error("Errore nella richiesta.");
-            }
-            return response.text();
-        })
-        .then(function(data) {
-            // Gestisci la risposta dal server (puoi fare qualcosa qui, se necessario)
-            console.log(data);
+    .then(function(response) {
+        if (!response.ok) {
+            throw new Error("Errore nella richiesta.");
+        }
+        return response.text();
+    })
+    .then(function(data) {
+        // Gestisci la risposta dal server (puoi fare qualcosa qui, se necessario)
+        console.log(data);
 
-            // Find the <a> element by its id
-            var navbarLabel = document.getElementById("navbar-label");
+        // Find the <a> element by its id
+        var navbarLabel = document.getElementById("navbar-label");
 
-            // Update the label based on the server response
-            if (data === 'gpt-3.5-turbo-0613') {
-                navbarLabel.textContent = "LA2I";
-                navbarLabel.style.color = "black";
-            } else {
-                navbarLabel.textContent = "LA2I*";
-                navbarLabel.style.color = "red";
-            }
-        })
-        .catch(function(error) {
-            // Gestisci eventuali errori qui
-            console.error(error);
-        });
+        // Update the label based on the server response
+        if (data === 'gpt-3.5-turbo-0613') {
+            navbarLabel.textContent = "LA2I";
+            navbarLabel.style.color = "black";
+        } else {
+            navbarLabel.textContent = "LA2I*";
+            navbarLabel.style.color = "red";
+        }
+    })
+    .catch(function(error) {
+        // Gestisci eventuali errori qui
+        console.error(error);
+    });
+});
+
+
+// Ottieni l'elemento select
+var settingOptionsSelect = document.getElementById("setting-options");
+
+// Aggiungi un evento di cambio all'elemento select
+settingOptionsSelect.addEventListener("change", function() {
+    //console.log("CHANGE")
+    // Ottieni il valore dell'opzione selezionata
+    var selectedValue = settingOptionsSelect.value;
+
+    // Configura l'oggetto di opzioni per la richiesta Fetch
+    var requestOptions = {
+        method: "POST",
+        body: JSON.stringify({ option: selectedValue }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    };
+
+    // Esegui la richiesta Fetch
+    fetch("/update_language", requestOptions)
+    .then(function(response) {
+        if (!response.ok) {
+            throw new Error("Errore nella richiesta.");
+        }
+        return response.text();
+    })
+    .then(function(data) {
+        // Gestisci la risposta dal server (puoi fare qualcosa qui, se necessario)
+        console.log(data);
+    })
+    .catch(function(error) {
+        // Gestisci eventuali errori qui
+        console.error(error);
+    });
 });

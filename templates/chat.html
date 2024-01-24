@@ -34,7 +34,7 @@
                         USER
                     </a>
                     <ul class="submenu dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item text-success" href="#">Settings</a></li>
+                        <li><a class="dropdown-item text-success" href="#" id="settings-menu">Settings</a></li>
                         <li><a class="dropdown-item text-danger" href="#" id="logout-link">Logout</a></li>
                     </ul>
                 </li>
@@ -68,6 +68,16 @@
         var model = "{{ model }}";
         console.log("Selected Model:", model);
     </script> -->
+
+    <div id="setting-section" class="setting-section">
+        <div class="setting-options-section"></div>
+            <label for="setting-options">Language:</label>
+            <select class="form-settings-control" id="setting-options">
+                <option value="italian" {% if language == 'italian' %} selected {% endif %}>Italian</option>
+                <option value="english" {% if language == 'english' %} selected {% endif %}>English</option>
+            </select>
+        </div>
+    </div>
     
     <div id="chat-section" class="chat-section">
         <div class="chat-options-section">

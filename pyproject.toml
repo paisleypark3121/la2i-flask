@@ -19,13 +19,13 @@ youtube-transcript-api = "^0.6.2"
 openai = "^1.6.1"
 networkx = "^3.2.1"
 matplotlib = "^3.8.2"
-fitz = "^0.0.1.dev2"
 frontend = "^0.0.3"
 tools = "^0.1.9"
 pdfplumber = "^0.10.3"
 chromadb = "^0.4.22"
 tiktoken = "^0.5.2"
 faiss-cpu = "^1.7.4"
+pymupdf = "^1.23.17"
 
 
 [build-system]

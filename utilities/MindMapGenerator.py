@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 
 from io import BytesIO
 
-template_dialogue = """You are a helpful assistant that generates a coded Mind Map given a specific [context].
-If the context contains questions, please ignore them.
+template_dialogue_en = """You are a helpful assistant that generates a coded Mind Map given a specific [context].
+If the [context] contains questions, please ignore them.
 Each map has to contain a maximum of 3 concepts and all connections must be labelled.
 The output has to be the NetworkX python code needed to produce the mind map. This output has to contain only the code needed without any import.
 As an example, the output has to start with: 
@@ -40,7 +40,41 @@ nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_siz
 
 coded mind map:"""
 
-template_context = """You are a helpful assistant that generates a coded Mind Map given a specific [context].
+template_dialogue_it = """Sei un assistente utile che genera una Mappa Concettuale codificata data un determinato [context].
+Se il [context] contiene domande, per favore ignorale.
+Ogni mappa deve contenere un massimo di 3 concetti e tutte le connessioni devono essere etichettate.
+L'output deve essere il codice NetworkX python necessario per produrre la mappa concettuale. 
+Questo output deve contenere solo il codice necessario senza alcun import.
+Come esempio, l'output deve iniziare con:
+mm = nx.Graph(); 
+Come esempio, se l'utente chiede:
+[context] Un atomo è l'unità fondamentale della materia, composta da due componenti principali: gli elettroni e il nucleo. Gli elettroni sono particelle subatomiche con carica negativa che orbitano intorno al nucleo in livelli energetici specifici o gusci elettronici; il nucleo è il nucleo centrale densamente concentrato di un atomo, dove si trova la maggior parte della sua massa ed è costituito da due tipi di particelle: protoni (particelle subatomiche con carica positiva) e neutroni (particelle subatomiche elettricamente neutre).
+
+coded mind map:
+G = nx.DiGraph()
+G.add_node("atomp", label="atomo")
+G.add_node("nucleo", label="nucleo")
+G.add_node("protoni", label="protoni")
+G.add_node("neutroni", label="neutroni")
+G.add_node("electroni", label="electroni")
+G.add_edge("atomo", "nucleo", label="composizione")
+G.add_edge("nucleo", "protoni", label="composizione")
+G.add_edge("nucleo", "neutroni", label="composizione")
+G.add_edge("atomo", "electroni", label="composizione")
+pos = nx.spring_layout(G)
+node_labels = nx.get_node_attributes(G, 'label')
+node_sizes = {node: len(label) * 500 for node, label in node_labels.items()}
+font_size = 14
+figure, ax = plt.subplots(figsize=(20, 15))
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=list(node_sizes.values()), node_color="skyblue",
+        font_size=font_size, edge_color="gray", nodelist=list(G.nodes()), ax=ax)
+edge_labels = nx.get_edge_attributes(G, 'label')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_size, font_color='red', ax=ax)'''
+[context]{context}
+
+coded mind map:"""
+
+template_context_en = """You are a helpful assistant that generates a coded Mind Map given a specific [context].
 Each map has to contain most usefull concepts and all connections must be labelled.
 The output has to be the NetworkX python code needed to produce the mind map. This output has to contain only the code needed without any import.
 As an example, the output has to start with: 
@@ -72,10 +106,47 @@ nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_siz
 
 coded mind map:"""
 
+template_context_it = """Sei un assistente utile che genera una Mappa Concettuale codificata data un determinato [context].
+Ogni mappa deve contenere i concetti principali e tutte le connessioni devono essere etichettate.
+L'output deve essere il codice NetworkX python necessario per produrre la mappa concettuale. 
+Questo output deve contenere solo il codice necessario senza alcun import.
+Come esempio, l'output deve iniziare con:
+mm = nx.Graph(); 
+Come esempio, se l'utente chiede:
+[context] Un atomo è l'unità fondamentale della materia, composta da due componenti principali: gli elettroni e il nucleo. Gli elettroni sono particelle subatomiche con carica negativa che orbitano intorno al nucleo in livelli energetici specifici o gusci elettronici; il nucleo è il nucleo centrale densamente concentrato di un atomo, dove si trova la maggior parte della sua massa ed è costituito da due tipi di particelle: protoni (particelle subatomiche con carica positiva) e neutroni (particelle subatomiche elettricamente neutre).
 
-def generateMindMap(text,temperature=0,model_name='gpt-4-0613'):
+coded mind map:
+G = nx.DiGraph()
+G.add_node("atomp", label="atomo")
+G.add_node("nucleo", label="nucleo")
+G.add_node("protoni", label="protoni")
+G.add_node("neutroni", label="neutroni")
+G.add_node("electroni", label="electroni")
+G.add_edge("atomo", "nucleo", label="composizione")
+G.add_edge("nucleo", "protoni", label="composizione")
+G.add_edge("nucleo", "neutroni", label="composizione")
+G.add_edge("atomo", "electroni", label="composizione")
+pos = nx.spring_layout(G)
+node_labels = nx.get_node_attributes(G, 'label')
+node_sizes = {node: len(label) * 500 for node, label in node_labels.items()}
+font_size = 14
+figure, ax = plt.subplots(figsize=(20, 15))
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=list(node_sizes.values()), node_color="skyblue",
+        font_size=font_size, edge_color="gray", nodelist=list(G.nodes()), ax=ax)
+edge_labels = nx.get_edge_attributes(G, 'label')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_size, font_color='red', ax=ax)'''
+[context]{context}
+
+coded mind map:"""
+
+
+def generateMindMap(language,text,temperature=0,model_name='gpt-4-0613'):
 
     #print(model_name)
+
+    template_dialogue=template_dialogue_en
+    if language=='italian':
+        template_dialogue=template_dialogue_it
 
     messages=[]
     messages.append(
@@ -140,7 +211,7 @@ def generateMindMap_context(text,temperature=0,model_name='gpt-4-0613'):
     messages.append(
         {
         "role": "system",
-        "content": template_context
+        "content": template_context_en
         }
     )
 
@@ -190,8 +261,6 @@ def generateMindMap_context(text,temperature=0,model_name='gpt-4-0613'):
     #exec(answer)
 
     #return file_name  
-
-
 
 def test():
     from dotenv import load_dotenv

@@ -9,7 +9,7 @@ from auth_routes import auth_blueprint
 import fitz
 
 from langchain.embeddings import OpenAIEmbeddings
-from utilities.chat_bot_manager import ChatBotManager,system_message,get_client
+from utilities.chat_bot_manager import *
 from utilities.chromadb_manager import *
 from utilities.MindMapGenerator import *
 #from utilities.FAISS_manager import *
@@ -37,20 +37,27 @@ app.register_blueprint(auth_blueprint)  # Register the blueprint
 def home():
     if 'user_id' in session:
         model = session.get("model")
+        language = session.get("language")
         if model is None:
-            model='gpt-3.5-turbo-0613'
+            model = 'gpt-3.5-turbo-0613'
             session["model"] = model
+        if language is None:
+            language = 'english'
+            session["language"] = language
         print("HOME")
         print(model)
-        return render_template("chat.html", model=model)
+        print(language)
+        return render_template("chat.html", model=model, language=language)
     else:
         return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.form.get("user_message") 
     user_id = session.get("user_id")
     model = session.get("model")
+    language = session.get("language")
 
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
@@ -59,9 +66,15 @@ def chat():
     if model is None:
         model='gpt-3.5-turbo-0613'
         session["model"] = model
+    if language is None:
+        language='english'
+        session["language"] = language
     
     messages = session.get("messages")
 
+    system_message=system_message_en
+    if language=='italian':
+        system_message=system_message_it
     if messages is None:
         messages = [{"role": "system", "content": system_message}]
         session["messages"] = messages
@@ -77,6 +90,7 @@ def chat():
         retriever = vectordb.as_retriever()
     
     chat_bot_manager = ChatBotManager(
+        language=language,
         model=model,
         messages=messages,
         retriever=retriever)
@@ -110,10 +124,11 @@ def process_file():
         content=content,
         embedding=embeddings,
         persist_directory=persist_directory)
-    retriever = vectordb.as_retriever()
-
+    #retriever = vectordb.as_retriever()
+    if vectordb is None:
+        return jsonify({"success": False, "message": "Error in creating vectordb"}), 200
+    
     session["retriever"] = persist_directory
-
     return jsonify({"success": True, "message": "Retriever created and stored"}), 200
 
 @app.route("/upload_file", methods=["POST"])
@@ -225,16 +240,19 @@ def generate_chromadb():
                 content = file.read()
             contents=contents+content+"\n"    
     
+    #print(contents)
+
     embeddings=OpenAIEmbeddings()
     persist_directory='./vector_store/'+user_id
     vectordb = create_vectordb_from_content(
         content=content,
         embedding=embeddings,
         persist_directory=persist_directory)
-    retriever = vectordb.as_retriever()
+    #retriever = vectordb.as_retriever()
+    if vectordb is None:
+        return jsonify({"success": False, "message": "Error in creating vectordb"}), 200
 
     session["retriever"] = persist_directory
-
     return jsonify({"success": True, "message": "Retriever created and stored"}), 200
 
 
@@ -248,6 +266,16 @@ def update_option():
     print(session.get("model"))
     return session.get("model")
 
+@app.route('/update_language', methods=['POST'])
+def update_language():
+    option = request.json['option']
+    if option == 'italian':
+        session["language"] = 'italian'
+    else:
+        session["language"] = 'english'
+    print(session.get("language"))
+    return jsonify({'language': session.get("language")})
+
 @app.route('/clear_history', methods=['POST'])
 def clear_chat_history():
     session['messages'] = []  # Clear the chat messages in the session
@@ -255,52 +283,56 @@ def clear_chat_history():
     return jsonify(success=True)
 
 
-@app.route("/mindmap", methods=["GET", "POST"])
-def mindmap():
-    user_id = session.get("user_id")
+# @app.route("/mindmap", methods=["GET", "POST"])
+# def mindmap():
+#     user_id = session.get("user_id")
 
-    if user_id is None:
-        return jsonify({"error": "User not authenticated"}), 401
+#     if user_id is None:
+#         return jsonify({"error": "User not authenticated"}), 401
 
-    messages = session.get("messages")
+#     messages = session.get("messages")
 
-    if messages is None:
-        return jsonify({"error": "No messages available"}), 404
+#     if messages is None:
+#         return jsonify({"error": "No messages available"}), 404
 
-    persist_directory = session.get("retriever")
+#     persist_directory = session.get("retriever")
 
-    retriever = None
-    if persist_directory:
-        embeddings = OpenAIEmbeddings()
-        vectordb = get_vectordb(
-            persist_directory=persist_directory,
-            embedding=embeddings)
-        retriever = vectordb.as_retriever()
+#     retriever = None
+#     if persist_directory:
+#         embeddings = OpenAIEmbeddings()
+#         vectordb = get_vectordb(
+#             persist_directory=persist_directory,
+#             embedding=embeddings)
+#         retriever = vectordb.as_retriever()
 
-    last_assistant_message = None
+#     last_assistant_message = None
 
-    for message in reversed(messages):
-        if message["role"] == "assistant":
-            last_assistant_message = message["content"]
-            break
+#     for message in reversed(messages):
+#         if message["role"] == "assistant":
+#             last_assistant_message = message["content"]
+#             break
 
-    if last_assistant_message is None:
-        return jsonify({"error": "No assistant message available"}), 404
+#     if last_assistant_message is None:
+#         return jsonify({"error": "No assistant message available"}), 404
 
-    print(last_assistant_message)
-    image_content = generateMindMap(text=last_assistant_message)
+#     print(last_assistant_message)
+#     image_content = generateMindMap(text=last_assistant_message)
 
-    # Encode the image content as base64
-    encoded_image = base64.b64encode(image_content).decode("utf-8")
-    return {"image_content": encoded_image}
+#     # Encode the image content as base64
+#     encoded_image = base64.b64encode(image_content).decode("utf-8")
+#     return {"image_content": encoded_image}
 
 
 @app.route("/mindmap_with_content", methods=["POST"])
 def mindmap_with_content():
     user_id = session.get("user_id")
+    language = session.get("language")
 
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
+    if language is None:
+        language = 'english'
+        session["language"] = language
 
     data = request.get_json()
 
@@ -312,7 +344,7 @@ def mindmap_with_content():
         return jsonify({"error": "No messages available"}), 404
 
     print(message)
-    image_content = generateMindMap(text=message)
+    image_content = generateMindMap(language=language,text=message)
 
     # Encode the image content as base64
     encoded_image = base64.b64encode(image_content).decode("utf-8")
@@ -323,9 +355,13 @@ def mindmap_with_content():
 @app.route("/get_summary", methods=["GET"])
 def get_summary():
     user_id = session.get("user_id")
+    language = session.get("language")
 
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
+    if language is None:
+        language = 'english'
+        session["language"] = language
 
     persist_directory = session.get("retriever")
     if persist_directory is None:
@@ -340,9 +376,9 @@ def get_summary():
     if vectordb is None:
         return None
 
-    retriever = vectordb.as_retriever()
+    #retriever = vectordb.as_retriever()
 
-    bot_response=summarize(embeddings, vectordb)
+    bot_response=summarize(language=language,embeddings=embeddings, vectordb=vectordb)
     if bot_response is None:
         return None
     
@@ -426,7 +462,145 @@ def list_credentials():
 
 @app.route("/test")
 def test():
+
+    # from langchain.chat_models import ChatOpenAI
+    # from langchain.embeddings.openai import OpenAIEmbeddings
+    # from langchain.vectorstores.chroma import Chroma
+    # from langchain.chains.summarize import load_summarize_chain
+    # from langchain.prompts import PromptTemplate
+    # from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+    # from langchain.chains.llm import LLMChain
+    # from langchain.vectorstores import Chroma
+    # from langchain.embeddings import OpenAIEmbeddings
+    # from langchain.text_splitter import RecursiveCharacterTextSplitter
+    # from langchain.schema.document import Document
+    
+
     return render_template("test.html")
+    # model='gpt-3.5-turbo-0613'
+    # temperature=0
+    # llm = ChatOpenAI(model=model,temperature=0)
+    # embedding=OpenAIEmbeddings()
+
+    # chunk_size = 1200
+    # chunk_overlap = 200
+
+    # user_id = "user1"
+    # persist_directory='./vector_store/'+user_id
+        
+    # contents=""
+    # filename="./files/Giai - testo - editable.pdf"
+    # pdf_document = fitz.open(filename)
+    # content = ""
+    # for page_num in range(len(pdf_document)):
+    #     page = pdf_document[page_num]
+    #     content = content + page.get_text() + "\n"
+            
+    # text_splitter = RecursiveCharacterTextSplitter(
+    #     chunk_size=chunk_size,
+    #     chunk_overlap=chunk_overlap, 
+    #     length_function=len
+    # )
+    
+    # texts = text_splitter.split_text(content)
+    # splits = [Document(page_content=t) for t in texts]
+    
+    # try:
+    #     delete_persist_directory(persist_directory)
+    # except Exception as e:
+    #     error="error in deleting vectorestore: "+str(e)
+    #     print(error)
+
+    # try:
+    #     Chroma.from_documents(
+    #         documents=splits, 
+    #         embedding=embedding, 
+    #         collection_metadata={"hnsw:space": "cosine"},
+    #         persist_directory = persist_directory
+    #     )
+    #     print("created")
+
+    #     vectordb=get_vectordb(persist_directory,embedding)
+    #     docs=vectordb.get()['documents']
+    #     print(docs[0][:100])
+
+    # except Exception as e:
+    #     error="error in creating vectorestore: "+str(e)
+    #     print(error)
+    
+    # try:
+    #     delete_persist_directory(persist_directory)
+    # except Exception as e:
+    #     error="error in deleting vectorestore: "+str(e)
+    #     print(error)
+
+    # contents=""
+    # filename="./files/DHCP.pdf"
+    # pdf_document = fitz.open(filename)
+    # content = ""
+    # for page_num in range(len(pdf_document)):
+    #     page = pdf_document[page_num]
+    #     content = content + page.get_text() + "\n"
+            
+    # text_splitter = RecursiveCharacterTextSplitter(
+    #     chunk_size=chunk_size,
+    #     chunk_overlap=chunk_overlap, 
+    #     length_function=len
+    # )
+    
+    # texts = text_splitter.split_text(content)
+    # splits = [Document(page_content=t) for t in texts]
+
+    # try:
+    #     Chroma.from_documents(
+    #         documents=splits, 
+    #         embedding=embedding, 
+    #         collection_metadata={"hnsw:space": "cosine"},
+    #         persist_directory = persist_directory
+    #     )
+    #     print("created")
+
+    #     vectordb=get_vectordb(persist_directory,embedding)
+    #     docs=vectordb.get()['documents']
+    #     print(docs[0][:100])
+
+    # except Exception as e:
+    #     error="error in creating vectorestore: "+str(e)
+    #     print(error)
+    
+    # user_id = "user1"
+    # persist_directory='./vector_store/'+user_id
+
+    # model='gpt-3.5-turbo-0613'
+    # temperature=0
+    # llm = ChatOpenAI(model=model,temperature=0)
+    # embedding=OpenAIEmbeddings()
+    
+    # contents=""
+    # filename="./files/Giai - testo - editable.pdf"
+    # pdf_document = fitz.open(filename)
+    # content = ""
+    # for page_num in range(len(pdf_document)):
+    #     page = pdf_document[page_num]
+    #     content = content + page.get_text() + "\n"
+    
+    # #print(content)
+    # vectordb = create_vectordb_from_content(
+    #     content=content,
+    #     embedding=embedding,
+    #     persist_directory=persist_directory)
+
+    # # vectordb2=get_vectordb(persist_directory,embedding)
+    # # #docs=vectordb2.get()['documents']
+
+    # vectordb3 = create_vectordb_from_content(
+    #     content=content,
+    #     embedding=embedding,
+    #     persist_directory=persist_directory)
+    
+    return "OK"
+
+    
 
 if __name__ == "__main__":
     #app.run(debug=True)

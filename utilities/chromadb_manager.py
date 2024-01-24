@@ -1,6 +1,8 @@
 import os
 import re
 from dotenv import load_dotenv
+import shutil
+import json
 
 import io
 import fitz
@@ -14,6 +16,15 @@ from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
+
+def delete_persist_directory(persist_directory):
+    if os.path.exists(persist_directory) and os.path.isdir(persist_directory):
+        # Use shutil.rmtree to remove the directory and its contents recursively
+        shutil.rmtree(persist_directory)
+        
+        print(f"All contents inside '{persist_directory}' have been cleaned.")
+    else:
+        print(f"The directory '{persist_directory}' does not exist.")
 
 def get_local_text(filename):
     with open(filename, "r", encoding="utf-8") as local_file:
@@ -93,53 +104,50 @@ def get_youtube_transcript(url, language_code="en", iteration=0):
 # print(content[0:100])
 
 def create_vectordb(location, embedding, persist_directory=None):
-    
-    vectordb=None
 
-    # if persist_directory and os.path.exists(persist_directory):
-    #     vectordb=Chroma(persist_directory,embedding)
-    
-    if vectordb is None:
-
-        print("CREATE")
-
-        if location.startswith("http"):
-            if location.endswith(".txt"):
-                content=get_remote_text(location)
-            elif location.endswith(".pdf"):
-                content=get_remote_pdf(location)
-            elif "youtube.com" in location:
-                content=get_youtube_transcript(location)
-            else:
-                content=None
-        elif os.path.isfile(location):
-            if location.endswith(".txt"):
-                content=get_local_text(location)
-            elif location.endswith(".pdf"):
-                content=get_local_pdf(location)
+    if location.startswith("http"):
+        if location.endswith(".txt"):
+            content=get_remote_text(location)
+        elif location.endswith(".pdf"):
+            content=get_remote_pdf(location)
+        elif "youtube.com" in location:
+            content=get_youtube_transcript(location)
         else:
             content=None
+    elif os.path.isfile(location):
+        if location.endswith(".txt"):
+            content=get_local_text(location)
+        elif location.endswith(".pdf"):
+            content=get_local_pdf(location)
+    else:
+        content=None
 
-        if content is None:
-            return None
+    if content is None:
+        return None
 
-        if len(content) < 5000:
-            chunk_size = 500
-            chunk_overlap = 50
-        else:
-            # Use the default values when the length is not smaller than 5000
-            chunk_size = 1200
-            chunk_overlap = 200
-            
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap, 
-            length_function=len,
-        )
+    if len(content) < 5000:
+        chunk_size = 500
+        chunk_overlap = 50
+    else:
+        # Use the default values when the length is not smaller than 5000
+        chunk_size = 1200
+        chunk_overlap = 200
         
-        texts = text_splitter.split_text(content)
-        splits = [Document(page_content=t) for t in texts]
-        
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap, 
+        length_function=len,
+    )
+    
+    texts = text_splitter.split_text(content)
+    splits = [Document(page_content=t) for t in texts]
+    
+    try:
+        vectordb=get_vectordb(persist_directory,embedding)
+        if vectordb:
+            vectordb.delete_collection()
+            print("collection deleted")
+
         vectordb=Chroma.from_documents(
             documents=splits, 
             embedding=embedding, 
@@ -147,50 +155,81 @@ def create_vectordb(location, embedding, persist_directory=None):
             persist_directory = persist_directory
         )
 
-    return vectordb
+        # response_data = {"success": True, "message": "vectorestore created successfully"}
+        # response_json = json.dumps(response_data)
+        # return response_json
+        return vectordb
+
+    except Exception as e:
+        error="error in creating vectorestore: "+str(e)
+        # response_data = {"success": False, "message": error}
+        # return json.dumps(response_data)
+        print(error)
+        return None
 
 def create_vectordb_from_content(content, embedding, persist_directory):
     
-    vectordb=None
+    if content is None:
+        error="None content"
+        response_data = {"success": False, "message": error}
+        return json.dumps(response_data)
 
-    # if persist_directory and os.path.exists(persist_directory):
-    #     print("LOAD")
-    #     print("persist_directory: "+persist_directory)
-    #     vectordb=Chroma(
-    #         persist_directory=persist_directory,
-    #         embedding_function=embedding)
+    if len(content) < 5000:
+        chunk_size = 500
+        chunk_overlap = 50
+    else:
+        # Use the default values when the length is not smaller than 5000
+        chunk_size = 1200
+        chunk_overlap = 200
         
-    if vectordb is None:
-        #print("IS NONE")
-        if content is None:
-            return None
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap, 
+        length_function=len
+    )
+    
+    texts = text_splitter.split_text(content)
+    splits = [Document(page_content=t) for t in texts]
+    
+    # try:
+    #     delete_persist_directory(persist_directory)
+    # except Exception as e:
+    #     error="error in creating vectorestore: "+str(e)
+    #     print(error)
 
-        if len(content) < 5000:
-            chunk_size = 500
-            chunk_overlap = 50
-        else:
-            # Use the default values when the length is not smaller than 5000
-            chunk_size = 1200
-            chunk_overlap = 200
-            
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap, 
-            length_function=len
-        )
-        
-        texts = text_splitter.split_text(content)
-        splits = [Document(page_content=t) for t in texts]
-        
+    # vectordb=Chroma.from_documents(
+    #     documents=splits, 
+    #     embedding=embedding, 
+    #     collection_metadata={"hnsw:space": "cosine"},
+    #     persist_directory = persist_directory
+    # )
+    #vectordb.persist()
+
+    try:
+        vectordb=get_vectordb(persist_directory,embedding)
+        if vectordb:
+            vectordb.delete_collection()
+            print("collection deleted")
+
         vectordb=Chroma.from_documents(
             documents=splits, 
             embedding=embedding, 
             collection_metadata={"hnsw:space": "cosine"},
             persist_directory = persist_directory
         )
-        vectordb.persist()
 
-    return vectordb
+        # response_data = {"success": True, "message": "vectorestore created successfully"}
+        # response_json = json.dumps(response_data)
+        # return response_json
+        return vectordb
+
+    except Exception as e:
+        error="error in creating vectorestore: "+str(e)
+        # response_data = {"success": False, "message": error}
+        # return json.dumps(response_data)
+        print(error)
+        return None
+
 # load_dotenv()
 # #location="files/jokerbirot_space_musician_en.txt"
 # location="files/DHCP.pdf"

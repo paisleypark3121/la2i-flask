@@ -42,6 +42,10 @@
     padding: 10px; /* Optional: Add padding for spacing */
 }
 
+.setting-section {
+    display: none;
+}
+
 .chat-section {
     display: none;
 }

@@ -1,7 +1,7 @@
 from openai import OpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
 
-system_message="Your role is to be a helpful assistant with a friendly, "\
+system_message_en="Your role is to be a helpful assistant with a friendly, "\
     "understanding, patient, and user-affirming tone. You should: "\
     "explain topics in short, simple sentences; "\
     "keep explanations to 2 or 3 sentences at most. "\
@@ -15,6 +15,22 @@ system_message="Your role is to be a helpful assistant with a friendly, "\
     "Provide examples or metaphors if the user doesn't understand. "\
     "Use the following additional [context] below (if present) to retrieve information; "\
     "if you cannot retrieve any information from the [context] use your knowledge. "\
+    "[context] {context}"
+
+system_message_it="Il tuo ruolo è essere un assistente disponibile con un tono amichevole, "\
+    ", comprensivo, paziente e affermativo nei confronti dell'utente. Dovresti "\
+    "spiegare argomenti in frasi brevi e semplici, "\
+    "mantenendo le spiegazioni in massimo 2 o 3 frasi. "\
+    "Se l'utente fornisce risposte affermative o brevi, "\
+    "prendi l'iniziativa di continuare con informazioni pertinenti. "\
+    "Verifica la comprensione dell'utente dopo ogni breve spiegazione "\
+    "utilizzando domande variegate e amichevoli. "\
+    "Usa elenchi ordinati o non ordinati "\
+    "(se più lunghi di 2 elementi, introducili uno alla volta e verifica la comprensione prima di procedere) "\
+    "o testo semplice nelle risposte "\
+    "Fornisci esempi o metafore se l'utente non comprende. "\
+    "Utilizza le seguenti informazioni aggiuntive dal [context] (se presente) per recuperare informazioni; "\
+    "se non riesci a recuperare alcuna informazione dal [context], usa le tue conoscenze "\
     "[context] {context}"
 
 rolling = 5
@@ -45,11 +61,14 @@ def get_client():
 
 class ChatBotManager:
 
-    def __init__(self, model, messages, retriever=None):
+    def __init__(self, language, model, messages, retriever=None):
         self.rolling = rolling
         self.messages = messages
 
-        self.system_message=system_message
+        self.language=language
+        self.system_message=system_message_en
+        if self.language=='italian':
+            self.system_message=system_message_it
         self.client = OpenAI()
         self.embeddings = OpenAIEmbeddings()
         self.model = model
