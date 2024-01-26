@@ -16,6 +16,7 @@ def login():
     if user:
         # Set the user's session cookie upon successful login
         session['user_id'] = username
+        print("user "+username+" logged in")
         return redirect(url_for('home'))
     else:
         return jsonify({"error": "Incorrect username or password"}), 400

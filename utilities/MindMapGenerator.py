@@ -189,7 +189,7 @@ def generateMindMap(language,type,text,temperature=0,model_name='gpt-4-0613'):
     last2 = timestamp % 100
     suffix = str(last2)
 
-    print(answer)
+    #print(answer)
     
     exec(answer)
     image_bytes_io = BytesIO()
