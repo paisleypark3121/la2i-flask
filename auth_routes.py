@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 from utilities.credentials import *
 
@@ -10,11 +11,14 @@ auth_blueprint = Blueprint('auth', __name__)
 def login():
     username = request.form.get("username")
     password = request.form.get("password")
-    #user = authenticate_user(username, password)
+
+    if username==os.environ.get('ADMIN_USERNAME') and password==os.environ.get('ADMIN_PASSWORD'):
+        session["user_id"]=os.environ.get('ADMIN_USERNAME')
+        return render_template("credentials.html")
+
     user=check_credentials(username, password)
 
     if user:
-        # Set the user's session cookie upon successful login
         session['user_id'] = username
         print("user "+username+" logged in")
         return redirect(url_for('home'))

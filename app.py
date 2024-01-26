@@ -404,9 +404,9 @@ def get_summary():
 
     return jsonify({"bot_response": bot_response})
 
-@app.route("/credentials")
-def credentials_panel():
-    return render_template("credentials.html")
+# @app.route("/credentials")
+# def credentials_panel():
+#     return render_template("credentials.html")
 
 # Function to check if a username exists
 def username_exists(username):
