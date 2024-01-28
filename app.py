@@ -410,7 +410,7 @@ def mindmap_enhanced():
     type='small'
     if 'type' in data:
         type = data['type']
-    print(type)
+    #print(type)
 
     nt = generateInteractiveMindMap(
         language=language,
@@ -419,6 +419,8 @@ def mindmap_enhanced():
         physics=physics)
 
     html=nt.generate_html()
+    html = html.replace("</head>", mm_js_code + "\n</head>")
+    html = html.replace(network_on_old,network_on)
     #print(html)
     #nt.show("nx.html",notebook=False)
 

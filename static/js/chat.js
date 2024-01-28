@@ -1,202 +1,10 @@
 // JavaScript code to handle chat interactions
 document.addEventListener("DOMContentLoaded", function () {
-    
-    // Add event listener for clearing chat history
-    function clearHistory() {
-        const chatHistory = document.getElementById("chat-history");
-        chatHistory.innerHTML = ""; 
 
-        const itemList = document.getElementById("item-list");
-        itemList.innerHTML = "";
+    // window.addEventListener('message', function(event) {
+    //     console.log("Message received from the child: " + event.data); // Message received from child
+    // });
 
-        // Update the visibility of the "generate" section based on the items array
-        const generateButton = document.getElementById("generate-button");
-        const itemListSection = document.getElementById("item-list-section");
-        generateButton.style.display = "none";
-        itemListSection.style.display = "none";
-
-        // Disable buttons when chat history is empty
-        clearHistoryButton.disabled = true;
-        saveHistoryButton.disabled = true;
-
-        const hintElement = document.createElement("div");
-        hintElement.id = "hint-text";
-        hintElement.className = "hint-text";
-        hintElement.textContent = "Chat history appears here";
-        chatHistory.appendChild(hintElement);
-
-        // const contentLoadedMessage = document.getElementById("content-loaded-message");
-        // contentLoadedMessage.style.display = "none";
-        const contentLoadedContainer = document.getElementById("content-loaded-container");
-        contentLoadedContainer.style.display = "none";
-    }
-
-    const clearHistoryButton = document.getElementById("clear-history-button");
-    
-    clearHistoryButton.addEventListener("click", () => {
-        const confirmed = window.confirm("Are you sure you want to clear the history?");
-        if (confirmed) {
-            fetch("/clear_history", {
-                method: "POST",
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                // Handle the response if needed
-                clearHistory();
-            });
-        }
-    });
-
-    // Add event listener for saving chat history as PDF
-    const saveHistoryButton = document.getElementById("save-history-button");
-    saveHistoryButton.addEventListener("click", () => {
-        saveChatHistoryAsPDF();
-    });
-    
-    async function saveChatHistoryAsPDF() {
-        window.jsPDF = window.jspdf.jsPDF;
-
-        start_y=20
-        num_lines=0
-        max_lines_per_page=32
-        
-        var doc = new jsPDF({
-            orientation: 'p', 
-            unit: 'mm', 
-            format: 'a4',
-            compress: 'true'
-            //format: [canvas.width, canvas.height] // set needed dimensions for any element
-        });
-
-        line_height=doc.internal.getLineHeight() * 0.3527777778
-        
-        function addEmptyLine(doc) {
-            doc.text('', currentX, currentY);
-            currentY += doc.getTextDimensions('M').h; // Use 'M' as a placeholder for line height
-            currentRow++;
-        }
-
-        function addText(doc, s) {
-            var splitTitle = doc.splitTextToSize(s, 180);
-            splitTitle=splitTitle.filter(sentence => sentence.trim() !== '');
-
-            temp_num_lines=num_lines+splitTitle.length+1
-            if (temp_num_lines>max_lines_per_page) {
-                dim1 = temp_num_lines - max_lines_per_page
-            
-                var array1 = splitTitle.slice(0, dim1);
-                var array2 = splitTitle.slice(dim1);
-                console.log("ARRAY1")
-                console.log(array1)
-                console.log("ARRAY2")
-                console.log(array2)
-
-                doc.text(10, start_y, array1);
-                doc.addPage();    
-                start_y=20
-                num_lines=0
-                doc.text(10, start_y, array2);
-                //start_y=start_y+10*array2.length
-                start_y=start_y+line_height*(array2.length+1)
-                num_lines=num_lines+array2.length+1
-
-            } else {
-
-                doc.text(10, start_y, splitTitle);
-                //doc.text(10, 20, s, { maxWidth: 180 });
-
-                //start_y=start_y+10*splitTitle.length
-                start_y=start_y+line_height*(splitTitle.length+1)
-            
-                num_lines=num_lines+splitTitle.length+1
-            }
-        }
-    
-        function addImage(doc, imageData) {
-            // Check if adding this image would exceed the page height
-            doc.addPage();
-            //doc.addImage(imageData, 'PNG', 10, 20, 200, 0,'','FAST');
-            doc.addImage(imageData, 'PNG', 0, 20, 200, 0,'','FAST');
-            doc.addPage();
-            start_y=20
-            num_lines=0
-        }
-          
-        async function generateHTMLIframe(name, iframeCounter, iframeContent) {
-            const iframeFileName = `${name}_${iframeCounter}.html`;
-            const iframeBlob = new Blob([iframeContent], { type: 'text/html' });
-            const iframeWritableStream = await window.showSaveFilePicker({ suggestedName: iframeFileName });
-            const iframeStream = await iframeWritableStream.createWritable();
-            await iframeStream.write(iframeBlob);
-            await iframeStream.close();      
-            alert("Map for "+iframeFileName+" saved as PDF successfully!");      
-        }
-
-        try {
-            const options = {
-                suggestedName: "chat_history.pdf",
-                types: [
-                    {
-                        description: "PDF Files",
-                        accept: {
-                            "application/pdf": [".pdf"],
-                        },
-                    },
-                ],
-            };
-
-            const fileHandle = await window.showSaveFilePicker(options);
-            const writableStream = await fileHandle.createWritable();
-
-            const chatHistory = document.getElementById("chat-history");
-
-            let iframeCounter=1
-
-            // Iterate through chat history elements
-            for (const element of chatHistory.children) {
-                //console.log(element.tagName)
-                if (element.classList.contains("user-message") || element.classList.contains("assistant-message")) {
-                    textContent = element.textContent.trim();
-                    addText(doc, textContent);
-                } else if (element.classList.contains("mindmap-image")) {
-                    imageData = await getImageDataFromBase64(element.src);
-                    addImage(doc, imageData);
-                } else if (element.tagName === "IFRAME") {
-                    const iframeContent = element.getAttribute('srcdoc');
-                    generateHTMLIframe(fileHandle.name,iframeCounter,iframeContent)
-                    iframeCounter++;
-                }
-            }
-            
-            // Convert PDF to blob
-            const pdfBlob = await doc.output("blob");
-
-            // Write the blob to the selected file
-            await writableStream.write(pdfBlob);
-            await writableStream.close();
-
-            // Display a success message
-            alert("Chat history saved as PDF successfully!");
-        } catch (error) {
-            console.error("Error saving PDF:", error);
-        }
-    };
-
-    // // Helper function to convert base64 image data to Uint8Array
-    function getImageDataFromBase64(base64Data) {
-        const dataURI = base64Data.split(",")[1]; // Remove data URI prefix
-        const binaryString = atob(dataURI);
-        const length = binaryString.length;
-        const uintArray = new Uint8Array(length);
-
-        for (let i = 0; i < length; i++) {
-            uintArray[i] = binaryString.charCodeAt(i);
-        }
-
-        return uintArray;
-    }
-
-    // Listen for the Bootstrap navbar collapse event
     const navbar = document.getElementById("navbarNav");
     const settingSection = document.getElementById("setting-section");
     const chatSection = document.getElementById("chat-section");
@@ -209,14 +17,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // const userMessageInput = document.getElementById("user-message");
+    // userMessageInput.addEventListener("keydown", function (e) {
+    //     if (e.ctrlKey && e.key === "Enter") {
+    //         e.preventDefault(); // Prevent the default behavior (newline in textarea)
+    //         chatForm.dispatchEvent(new Event("submit")); // Dispatch a submit event on the form
+    //     }
+    // });
+
     const userMessageInput = document.getElementById("user-message");
     userMessageInput.addEventListener("keydown", function (e) {
-        if (e.ctrlKey && e.key === "Enter") {
-            e.preventDefault(); // Prevent the default behavior (newline in textarea)
-            chatForm.dispatchEvent(new Event("submit")); // Dispatch a submit event on the form
+        if (e.key === "Enter") {
+            if (e.ctrlKey || e.metaKey) {
+                // CTRL+ENTER (or Command+ENTER on Mac) should perform a carriage return
+                const textarea = e.target;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const value = textarea.value;
+                const before = value.substring(0, start);
+                const after = value.substring(end, value.length);
+                textarea.value = before + "\n" + after;
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+            } else {
+                // ENTER without CTRL should submit the form
+                e.preventDefault(); // Prevent the default behavior (newline in textarea)
+                chatForm.dispatchEvent(new Event("submit")); // Dispatch a submit event on the form
+            }
         }
     });
-
+    
     const chatForm = document.getElementById("chat-form");
     chatForm.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -234,289 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
         userMessageInput.value = "";
     });
 
-    function scrollToBottom() {
-        const chatHistory = document.getElementById("chat-history");
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
-
-    function enableButtonsIfNotEmpty() {
-        const chatHistory = document.getElementById("chat-history");
-        const hintElement = document.getElementById("hint-text");
-        //console.log(chatHistory.childElementCount)
-        // Check if chat history is empty (excluding the hint text)
-        if (chatHistory.childElementCount === 1 && chatHistory.firstElementChild === hintElement) {
-            //console.log("equals")
-            clearHistoryButton.disabled = true;
-            saveHistoryButton.disabled = true;
-        } else {
-            //console.log("not equals")
-            clearHistoryButton.disabled = false;
-            saveHistoryButton.disabled = false;
-        }
-    }
-
     enableButtonsIfNotEmpty()
 
-    function appendMessage(sender, message) {
-        const chatHistory = document.getElementById("chat-history");
-        const messageElement = document.createElement("div");
-        messageElement.classList.add("message");
-    
-        // Create a button element for text-to-speech
-        const ttsButton = document.createElement("button");
-        ttsButton.className = "btn btn-primary text-to-speech-button";
-        const svgHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-speaker" viewBox="0 0 16 48">
-                <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
-                <path d="M8 4.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4m0 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-3.5 1.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-            </svg>
-        `;
-        ttsButton.innerHTML = svgHTML;
-
-        const mmButton = document.createElement("button");
-        mmButton.className = "btn btn-primary mindmap-button";
-        const svg_mm_HTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-2-fill" viewBox="0 0 16 48">
-            <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zm-3 8A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 9 12.5z"/>
-        </svg>
-        `;
-        mmButton.innerHTML = svg_mm_HTML;
-
-        mmButton.addEventListener("click", async () => {
-
-            const parentDiv = mmButton.closest(".assistant-message");
-
-            // Get the textual content from the parent div
-            const messageContent = parentDiv.textContent.trim();
-
-            // Show the loading modal
-            const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
-            loadingModal.show();
-        
-            try {
-
-                const response = await fetch("/mindmap_enhanced", {
-                    method: "POST", // Assuming you want to send the message content as a POST request
-                    headers: {
-                        "Content-Type": "application/json", // Set the appropriate content type
-                    },
-                    body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const htmlContent = data.html;
-
-                    const iframe = document.createElement("iframe");
-    
-                    iframe.style.width = "100%";
-                    iframe.srcdoc = htmlContent;
-
-                    // Add an event listener to adjust the iframe's height after it loads
-                    iframe.addEventListener("load", function() {
-                        this.style.height = this.contentWindow.document.body.scrollHeight + "px";
-                    });
-
-                    const chatHistoryDiv = document.getElementById("chat-history");
-                    chatHistoryDiv.appendChild(iframe);
-
-                } else {
-                    console.error("Error fetching mind map image");
-                }
-
-                // // Make a fetch request to your mind map image endpoint
-                // const response = await fetch("/mindmap_with_content", {
-                //     method: "POST", // Assuming you want to send the message content as a POST request
-                //     headers: {
-                //         "Content-Type": "application/json", // Set the appropriate content type
-                //     },
-                //     body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
-                // });
-        
-                // if (response.ok) {
-                //     const data = await response.json();
-                //     const encodedImage = data.image_content;
-        
-                //     // Create a new image element
-                //     const mindmapImage = document.createElement("img");
-                //     mindmapImage.classList.add("mindmap-image");
-                //     mindmapImage.src = "data:image/png;base64," + encodedImage;
-                //     mindmapImage.alt = "Mind Map Image";
-        
-                //     // Append the image element to the chat-history div
-                //     const chatHistoryDiv = document.getElementById("chat-history");
-                //     chatHistoryDiv.appendChild(mindmapImage);
-
-                // } else {
-                //     // Handle error
-                //     console.error("Error fetching mind map image");
-                // }
-            } catch (error) {
-                console.error("An error occurred:", error);
-            } finally {
-                // Hide the loading modal after the response is received or an error occurs
-                loadingModal.hide();
-            }
-        });
-
-        const mm2Button = document.createElement("button");
-        mm2Button.className = "btn btn-primary mindmap-button";
-        const svg_mm2_HTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-3-fill" viewBox="0 0 16 48">
-            <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zm-6 8A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm6 0A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>
-        </svg>
-        `;
-        mm2Button.innerHTML = svg_mm2_HTML;
-
-        mm2Button.addEventListener("click", async () => {
-
-            const parentDiv = mmButton.closest(".assistant-message");
-
-            // Get the textual content from the parent div
-            const messageContent = parentDiv.textContent.trim();
-
-            // Show the loading modal
-            const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
-            loadingModal.show();
-        
-            try {
-
-                const response = await fetch("/mindmap_enhanced", {
-                    method: "POST", // Assuming you want to send the message content as a POST request
-                    headers: {
-                        "Content-Type": "application/json", // Set the appropriate content type
-                    },
-                    body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const htmlContent = data.html;
-
-                    const iframe = document.createElement("iframe");
-    
-                    iframe.style.width = "100%";
-                    iframe.srcdoc = htmlContent;
-
-                    // Add an event listener to adjust the iframe's height after it loads
-                    iframe.addEventListener("load", function() {
-                        this.style.height = this.contentWindow.document.body.scrollHeight + "px";
-                    });
-
-                    const chatHistoryDiv = document.getElementById("chat-history");
-                    chatHistoryDiv.appendChild(iframe);
-
-                } else {
-                    console.error("Error fetching mind map image");
-                }
-                // Make a fetch request to your mind map image endpoint
-                // const response = await fetch("/mindmap_with_content", {
-                //     method: "POST", // Assuming you want to send the message content as a POST request
-                //     headers: {
-                //         "Content-Type": "application/json", // Set the appropriate content type
-                //     },
-                //     body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
-                // });
-        
-                // if (response.ok) {
-                //     const data = await response.json();
-                //     const encodedImage = data.image_content;
-        
-                //     // Create a new image element
-                //     const mindmapImage = document.createElement("img");
-                //     mindmapImage.classList.add("mindmap-image");
-                //     mindmapImage.src = "data:image/png;base64," + encodedImage;
-                //     mindmapImage.alt = "Mind Map Image";
-        
-                //     // Append the image element to the chat-history div
-                //     const chatHistoryDiv = document.getElementById("chat-history");
-                //     chatHistoryDiv.appendChild(mindmapImage);
-
-                // } else {
-                //     // Handle error
-                //     console.error("Error fetching mind map image");
-                // }
-            } catch (error) {
-                console.error("An error occurred:", error);
-            } finally {
-                // Hide the loading modal after the response is received or an error occurs
-                loadingModal.hide();
-            }
-        });
-
-        // mmButton.addEventListener("click", async () => {
-        //     // Show the loading modal
-        //     const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
-        //     loadingModal.show();
-        
-        //     try {
-        //         // Make a fetch request to your mind map image endpoint
-        //         const response = await fetch("/mindmap", {
-        //             method: "GET",
-        //         });
-        
-        //         if (response.ok) {
-        //             const data = await response.json();
-        //             const encodedImage = data.image_content;
-        
-        //             // Create a new image element
-        //             const mindmapImage = document.createElement("img");
-        //             mindmapImage.classList.add("mindmap-image");
-        //             mindmapImage.src = "data:image/png;base64," + encodedImage;
-        //             mindmapImage.alt = "Mind Map Image";
-        
-        //             // Append the image element to the chat-history div
-        //             const chatHistoryDiv = document.getElementById("chat-history");
-        //             chatHistoryDiv.appendChild(mindmapImage);
-
-        //         } else {
-        //             // Handle error
-        //             console.error("Error fetching mind map image");
-        //         }
-        //     } catch (error) {
-        //         console.error("An error occurred:", error);
-        //     } finally {
-        //         // Hide the loading modal after the response is received or an error occurs
-        //         loadingModal.hide();
-        //     }
-        // });
-        
-        ttsButton.addEventListener("click", () => {
-            // Call your text-to-speech function here
-            performTextToSpeech(message);
-        });
-    
-        ttsButton.style.marginLeft = "10px";
-    
-        // Set different CSS classes for user and bot messages
-        if (sender === "User") {
-            messageElement.classList.add("user-message");
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        } else if (sender === "Assistant") {
-            messageElement.classList.add("assistant-message");
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-            messageElement.appendChild(ttsButton);
-            messageElement.appendChild(mmButton);
-            messageElement.appendChild(mm2Button);
-            
-        } else {
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-        }
-    
-        chatHistory.appendChild(messageElement);
-    
-        if (chatHistory.children.length > 0) {
-            const hintText = document.getElementById('hint-text');
-            if (hintText) {
-                hintText.remove();
-            }
-        }
-
-        enableButtonsIfNotEmpty();
-    
-        scrollToBottom();
-    }
-    
     // Function to perform text-to-speech
     function performTextToSpeech(text) {
         // Check if the browser supports the SpeechSynthesis API
@@ -536,57 +84,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
         
-    async function sendUserMessage(message) {
-
-        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
-        loadingModal.show();
-
-        botResponse=""
-        try {
-            // Make a fetch request to your mind map image endpoint
-            const response = await fetch("/chat", {
-                method: "POST",
-                body: new URLSearchParams({ user_message: message }),
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            })
-    
-            if (response.ok) {
-                const data = await response.json();
-                botResponse=data.bot_response;
-            } else {
-                // Handle error
-                console.error("Error fetching mind map image");
-            }
-        } catch (error) {
-            console.error("An error occurred:", error);
-        } finally {
-            // Hide the loading modal after the response is received or an error occurs
-            loadingModal.hide();
-        }
-
-        if (botResponse)
-            appendMessage("Assistant", botResponse); // Display the bot's response
-        
-        // fetch("/chat", {
-        //     method: "POST",
-        //     body: new URLSearchParams({ user_message: message }),
-        //     headers: {
-        //         "Content-Type": "application/x-www-form-urlencoded",
-        //     },
-        // })
-        // .then((response) => response.json())
-        // .then((data) => {
-        //     // Handle the server response and display it in the chat history
-        //     const botResponse = data.bot_response;
-        //     appendMessage("Assistant", botResponse); // Display the bot's response
-        // })
-        // .catch((error) => {
-        //     console.error("Error sending message:", error);
-        // });
-    }
-
     const stickyButton = document.getElementById("sticky-button");
     stickyButton.addEventListener("click", async () => {        
             
@@ -969,7 +466,6 @@ chatOptionsSelect.addEventListener("change", function() {
     });
 });
 
-
 // Ottieni l'elemento select
 var settingOptionsSelect = document.getElementById("setting-options");
 
@@ -1044,3 +540,559 @@ togglePhysicsCheckbox.addEventListener('change', function () {
         });
 });
 
+const saveHistoryButton = document.getElementById("save-history-button");
+    saveHistoryButton.addEventListener("click", () => {
+        saveChatHistoryAsPDF();
+});
+    
+async function saveChatHistoryAsPDF() {
+    window.jsPDF = window.jspdf.jsPDF;
+
+    start_y=20
+    num_lines=0
+    max_lines_per_page=32
+    
+    var doc = new jsPDF({
+        orientation: 'p', 
+        unit: 'mm', 
+        format: 'a4',
+        compress: 'true'
+        //format: [canvas.width, canvas.height] // set needed dimensions for any element
+    });
+
+    line_height=doc.internal.getLineHeight() * 0.3527777778
+    
+    function addEmptyLine(doc) {
+        doc.text('', currentX, currentY);
+        currentY += doc.getTextDimensions('M').h; // Use 'M' as a placeholder for line height
+        currentRow++;
+    }
+
+    function addText(doc, s) {
+        var splitTitle = doc.splitTextToSize(s, 180);
+        splitTitle=splitTitle.filter(sentence => sentence.trim() !== '');
+
+        temp_num_lines=num_lines+splitTitle.length+1
+        if (temp_num_lines>max_lines_per_page) {
+            dim1 = temp_num_lines - max_lines_per_page
+        
+            var array1 = splitTitle.slice(0, dim1);
+            var array2 = splitTitle.slice(dim1);
+            console.log("ARRAY1")
+            console.log(array1)
+            console.log("ARRAY2")
+            console.log(array2)
+
+            doc.text(10, start_y, array1);
+            doc.addPage();    
+            start_y=20
+            num_lines=0
+            doc.text(10, start_y, array2);
+            //start_y=start_y+10*array2.length
+            start_y=start_y+line_height*(array2.length+1)
+            num_lines=num_lines+array2.length+1
+
+        } else {
+
+            doc.text(10, start_y, splitTitle);
+            //doc.text(10, 20, s, { maxWidth: 180 });
+
+            //start_y=start_y+10*splitTitle.length
+            start_y=start_y+line_height*(splitTitle.length+1)
+        
+            num_lines=num_lines+splitTitle.length+1
+        }
+    }
+
+    function addImage(doc, imageData) {
+        // Check if adding this image would exceed the page height
+        doc.addPage();
+        //doc.addImage(imageData, 'PNG', 10, 20, 200, 0,'','FAST');
+        doc.addImage(imageData, 'PNG', 0, 20, 200, 0,'','FAST');
+        doc.addPage();
+        start_y=20
+        num_lines=0
+    }
+        
+    async function generateHTMLIframe(name, iframeCounter, iframeContent) {
+        const iframeFileName = `${name}_${iframeCounter}.html`;
+        const iframeBlob = new Blob([iframeContent], { type: 'text/html' });
+        const iframeWritableStream = await window.showSaveFilePicker({ suggestedName: iframeFileName });
+        const iframeStream = await iframeWritableStream.createWritable();
+        await iframeStream.write(iframeBlob);
+        await iframeStream.close();      
+        alert("Map for "+iframeFileName+" saved as PDF successfully!");      
+    }
+
+    try {
+        const options = {
+            suggestedName: "chat_history.pdf",
+            types: [
+                {
+                    description: "PDF Files",
+                    accept: {
+                        "application/pdf": [".pdf"],
+                    },
+                },
+            ],
+        };
+
+        const fileHandle = await window.showSaveFilePicker(options);
+        const writableStream = await fileHandle.createWritable();
+
+        const chatHistory = document.getElementById("chat-history");
+
+        let iframeCounter=1
+
+        // Iterate through chat history elements
+        for (const element of chatHistory.children) {
+            //console.log(element.tagName)
+            if (element.classList.contains("user-message") || element.classList.contains("assistant-message")) {
+                textContent = element.textContent.trim();
+                addText(doc, textContent);
+            } else if (element.classList.contains("mindmap-image")) {
+                imageData = await getImageDataFromBase64(element.src);
+                addImage(doc, imageData);
+            } else if (element.tagName === "IFRAME") {
+                const iframeContent = element.getAttribute('srcdoc');
+                generateHTMLIframe(fileHandle.name,iframeCounter,iframeContent)
+                iframeCounter++;
+            }
+        }
+        
+        // Convert PDF to blob
+        const pdfBlob = await doc.output("blob");
+
+        // Write the blob to the selected file
+        await writableStream.write(pdfBlob);
+        await writableStream.close();
+
+        // Display a success message
+        alert("Chat history saved as PDF successfully!");
+    } catch (error) {
+        console.error("Error saving PDF:", error);
+    }
+};
+
+// // Helper function to convert base64 image data to Uint8Array
+function getImageDataFromBase64(base64Data) {
+    const dataURI = base64Data.split(",")[1]; // Remove data URI prefix
+    const binaryString = atob(dataURI);
+    const length = binaryString.length;
+    const uintArray = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+        uintArray[i] = binaryString.charCodeAt(i);
+    }
+
+    return uintArray;
+}
+
+// Add event listener for clearing chat history
+function clearHistory() {
+    const chatHistory = document.getElementById("chat-history");
+    chatHistory.innerHTML = ""; 
+
+    const itemList = document.getElementById("item-list");
+    itemList.innerHTML = "";
+
+    // Update the visibility of the "generate" section based on the items array
+    const generateButton = document.getElementById("generate-button");
+    const itemListSection = document.getElementById("item-list-section");
+    generateButton.style.display = "none";
+    itemListSection.style.display = "none";
+
+    // Disable buttons when chat history is empty
+    clearHistoryButton.disabled = true;
+    saveHistoryButton.disabled = true;
+
+    const hintElement = document.createElement("div");
+    hintElement.id = "hint-text";
+    hintElement.className = "hint-text";
+    hintElement.textContent = "Chat history appears here";
+    chatHistory.appendChild(hintElement);
+
+    // const contentLoadedMessage = document.getElementById("content-loaded-message");
+    // contentLoadedMessage.style.display = "none";
+    const contentLoadedContainer = document.getElementById("content-loaded-container");
+    contentLoadedContainer.style.display = "none";
+}
+
+const clearHistoryButton = document.getElementById("clear-history-button");
+
+clearHistoryButton.addEventListener("click", () => {
+    const confirmed = window.confirm("Are you sure you want to clear the history?");
+    if (confirmed) {
+        fetch("/clear_history", {
+            method: "POST",
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            // Handle the response if needed
+            clearHistory();
+        });
+    }
+});
+
+function enableButtonsIfNotEmpty() {
+    const chatHistory = document.getElementById("chat-history");
+    const hintElement = document.getElementById("hint-text");
+    //console.log(chatHistory.childElementCount)
+    // Check if chat history is empty (excluding the hint text)
+    if (chatHistory.childElementCount === 1 && chatHistory.firstElementChild === hintElement) {
+        //console.log("equals")
+        clearHistoryButton.disabled = true;
+        saveHistoryButton.disabled = true;
+    } else {
+        //console.log("not equals")
+        clearHistoryButton.disabled = false;
+        saveHistoryButton.disabled = false;
+    }
+}
+
+function scrollToBottom() {
+    const chatHistory = document.getElementById("chat-history");
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function appendMessage(sender, message) {
+    const chatHistory = document.getElementById("chat-history");
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message");
+
+    // Create a button element for text-to-speech
+    const ttsButton = document.createElement("button");
+    ttsButton.className = "btn btn-primary text-to-speech-button";
+    const svgHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-speaker" viewBox="0 0 16 48">
+            <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+            <path d="M8 4.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5M8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4m0 3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m-3.5 1.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+        </svg>
+    `;
+    ttsButton.innerHTML = svgHTML;
+
+    const mmButton = document.createElement("button");
+    mmButton.className = "btn btn-primary mindmap-button";
+    const svg_mm_HTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-2-fill" viewBox="0 0 16 48">
+        <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zm-3 8A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 9 12.5z"/>
+    </svg>
+    `;
+    mmButton.innerHTML = svg_mm_HTML;
+
+    mmButton.addEventListener("click", async () => {
+
+        const parentDiv = mmButton.closest(".assistant-message");
+
+        // Get the textual content from the parent div
+        const messageContent = parentDiv.textContent.trim();
+
+        // Show the loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+        loadingModal.show();
+    
+        try {
+
+            const response = await fetch("/mindmap_enhanced", {
+                method: "POST", // Assuming you want to send the message content as a POST request
+                headers: {
+                    "Content-Type": "application/json", // Set the appropriate content type
+                },
+                body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const htmlContent = data.html;
+
+                const iframe = document.createElement("iframe");
+
+                iframe.style.width = "100%";
+                iframe.srcdoc = htmlContent;
+
+                // Add an event listener to adjust the iframe's height after it loads
+                iframe.addEventListener("load", function() {
+                    this.style.height = this.contentWindow.document.body.scrollHeight + "px";
+                });
+
+                const chatHistoryDiv = document.getElementById("chat-history");
+                chatHistoryDiv.appendChild(iframe);
+
+            } else {
+                console.error("Error fetching mind map image");
+            }
+
+            // // Make a fetch request to your mind map image endpoint
+            // const response = await fetch("/mindmap_with_content", {
+            //     method: "POST", // Assuming you want to send the message content as a POST request
+            //     headers: {
+            //         "Content-Type": "application/json", // Set the appropriate content type
+            //     },
+            //     body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
+            // });
+    
+            // if (response.ok) {
+            //     const data = await response.json();
+            //     const encodedImage = data.image_content;
+    
+            //     // Create a new image element
+            //     const mindmapImage = document.createElement("img");
+            //     mindmapImage.classList.add("mindmap-image");
+            //     mindmapImage.src = "data:image/png;base64," + encodedImage;
+            //     mindmapImage.alt = "Mind Map Image";
+    
+            //     // Append the image element to the chat-history div
+            //     const chatHistoryDiv = document.getElementById("chat-history");
+            //     chatHistoryDiv.appendChild(mindmapImage);
+
+            // } else {
+            //     // Handle error
+            //     console.error("Error fetching mind map image");
+            // }
+        } catch (error) {
+            console.error("An error occurred:", error);
+        } finally {
+            // Hide the loading modal after the response is received or an error occurs
+            loadingModal.hide();
+        }
+    });
+
+    const mm2Button = document.createElement("button");
+    mm2Button.className = "btn btn-primary mindmap-button";
+    const svg_mm2_HTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-3-fill" viewBox="0 0 16 48">
+        <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zm-6 8A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm6 0A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>
+    </svg>
+    `;
+    mm2Button.innerHTML = svg_mm2_HTML;
+
+    mm2Button.addEventListener("click", async () => {
+
+        const parentDiv = mmButton.closest(".assistant-message");
+
+        // Get the textual content from the parent div
+        const messageContent = parentDiv.textContent.trim();
+
+        // Show the loading modal
+        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+        loadingModal.show();
+    
+        try {
+
+            const response = await fetch("/mindmap_enhanced", {
+                method: "POST", // Assuming you want to send the message content as a POST request
+                headers: {
+                    "Content-Type": "application/json", // Set the appropriate content type
+                },
+                body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const htmlContent = data.html;
+
+                const iframe = document.createElement("iframe");
+
+                iframe.style.width = "100%";
+                iframe.srcdoc = htmlContent;
+
+                // Add an event listener to adjust the iframe's height after it loads
+                iframe.addEventListener("load", function() {
+                    this.style.height = this.contentWindow.document.body.scrollHeight + "px";
+                });
+
+                const chatHistoryDiv = document.getElementById("chat-history");
+                chatHistoryDiv.appendChild(iframe);
+
+            } else {
+                console.error("Error fetching mind map image");
+            }
+            // Make a fetch request to your mind map image endpoint
+            // const response = await fetch("/mindmap_with_content", {
+            //     method: "POST", // Assuming you want to send the message content as a POST request
+            //     headers: {
+            //         "Content-Type": "application/json", // Set the appropriate content type
+            //     },
+            //     body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
+            // });
+    
+            // if (response.ok) {
+            //     const data = await response.json();
+            //     const encodedImage = data.image_content;
+    
+            //     // Create a new image element
+            //     const mindmapImage = document.createElement("img");
+            //     mindmapImage.classList.add("mindmap-image");
+            //     mindmapImage.src = "data:image/png;base64," + encodedImage;
+            //     mindmapImage.alt = "Mind Map Image";
+    
+            //     // Append the image element to the chat-history div
+            //     const chatHistoryDiv = document.getElementById("chat-history");
+            //     chatHistoryDiv.appendChild(mindmapImage);
+
+            // } else {
+            //     // Handle error
+            //     console.error("Error fetching mind map image");
+            // }
+        } catch (error) {
+            console.error("An error occurred:", error);
+        } finally {
+            // Hide the loading modal after the response is received or an error occurs
+            loadingModal.hide();
+        }
+    });
+
+    // mmButton.addEventListener("click", async () => {
+    //     // Show the loading modal
+    //     const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+    //     loadingModal.show();
+    
+    //     try {
+    //         // Make a fetch request to your mind map image endpoint
+    //         const response = await fetch("/mindmap", {
+    //             method: "GET",
+    //         });
+    
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             const encodedImage = data.image_content;
+    
+    //             // Create a new image element
+    //             const mindmapImage = document.createElement("img");
+    //             mindmapImage.classList.add("mindmap-image");
+    //             mindmapImage.src = "data:image/png;base64," + encodedImage;
+    //             mindmapImage.alt = "Mind Map Image";
+    
+    //             // Append the image element to the chat-history div
+    //             const chatHistoryDiv = document.getElementById("chat-history");
+    //             chatHistoryDiv.appendChild(mindmapImage);
+
+    //         } else {
+    //             // Handle error
+    //             console.error("Error fetching mind map image");
+    //         }
+    //     } catch (error) {
+    //         console.error("An error occurred:", error);
+    //     } finally {
+    //         // Hide the loading modal after the response is received or an error occurs
+    //         loadingModal.hide();
+    //     }
+    // });
+    
+    ttsButton.addEventListener("click", () => {
+        // Call your text-to-speech function here
+        performTextToSpeech(message);
+    });
+
+    ttsButton.style.marginLeft = "10px";
+
+    // Set different CSS classes for user and bot messages
+    if (sender === "User") {
+        messageElement.classList.add("user-message");
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    } else if (sender === "Assistant") {
+        messageElement.classList.add("assistant-message");
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        messageElement.appendChild(ttsButton);
+        messageElement.appendChild(mmButton);
+        messageElement.appendChild(mm2Button);
+        
+    } else {
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    }
+
+    chatHistory.appendChild(messageElement);
+
+    if (chatHistory.children.length > 0) {
+        const hintText = document.getElementById('hint-text');
+        if (hintText) {
+            hintText.remove();
+        }
+    }
+
+    enableButtonsIfNotEmpty();
+
+    scrollToBottom();
+}
+
+async function sendUserMessage(message) {
+
+    const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+    loadingModal.show();
+
+    botResponse=""
+    try {
+        // Make a fetch request to your mind map image endpoint
+        const response = await fetch("/chat", {
+            method: "POST",
+            body: new URLSearchParams({ user_message: message }),
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        })
+
+        if (response.ok) {
+            const data = await response.json();
+            botResponse=data.bot_response;
+        } else {
+            // Handle error
+            console.error("Error fetching mind map image");
+        }
+    } catch (error) {
+        console.error("An error occurred:", error);
+    } finally {
+        // Hide the loading modal after the response is received or an error occurs
+        loadingModal.hide();
+    }
+
+    if (botResponse)
+        appendMessage("Assistant", botResponse); // Display the bot's response
+    
+    // fetch("/chat", {
+    //     method: "POST",
+    //     body: new URLSearchParams({ user_message: message }),
+    //     headers: {
+    //         "Content-Type": "application/x-www-form-urlencoded",
+    //     },
+    // })
+    // .then((response) => response.json())
+    // .then((data) => {
+    //     // Handle the server response and display it in the chat history
+    //     const botResponse = data.bot_response;
+    //     appendMessage("Assistant", botResponse); // Display the bot's response
+    // })
+    // .catch((error) => {
+    //     console.error("Error sending message:", error);
+    // });
+}
+
+window.addEventListener("message", function(event) {
+    // Check if the message is from a trusted source (you can add origin checks)
+    // In this example, we are using "*" to accept messages from any source
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+  
+    // Handle the message received from the iframe
+    console.log("Received message from iframe:", event.data);
+
+    message="Do you want to know more about the topic: "+event.data+"?"
+    userMessage="I want to know more about the topic: "+event.data
+    if (settingOptionsSelect.value=="italian") {
+        message="Vuoi sapere di più sull'argomento: "+event.data+"?"
+        userMessage="Voglio sapere di più sull'argomento: "+event.data
+    }
+    var confirmation = confirm(message);
+  
+    if (confirmation) {
+        //alert("You chose to know more!");
+        
+        // Display user's message in chat history
+        appendMessage("User", userMessage);
+    
+        sendUserMessage(userMessage);
+
+        const userMessageInput = document.getElementById("user-message");
+        userMessageInput.value = "";
+    } 
+});

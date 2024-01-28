@@ -105,6 +105,26 @@ nt.add_edge("atomo", "electroni", label="composizione")'''
 
 coded mind map:"""
 
+mm_js_code = """
+<script type="text/javascript">
+  function handleDoubleClick(nodeId) {
+    //alert("Double-clicked on Node " + nodeId);
+  }
+</script>
+"""
+
+network_on_old="""network = new vis.Network(container, data, options);"""
+
+network_on="""
+network = new vis.Network(container, data, options);
+network.on("doubleClick", function(event) {
+  var nodeId = event.nodes[0];
+  if (nodeId) {
+    handleDoubleClick(nodeId);
+    window.parent.postMessage(nodeId, "*");
+  }
+});
+"""
 
 def generateMindMap(language,type,text,temperature=0,model_name='gpt-4-0613'):
 
