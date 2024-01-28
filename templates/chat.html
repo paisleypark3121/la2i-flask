@@ -16,7 +16,7 @@
             LA2I
         </a> -->
         <a id="navbar-label" class="navbar-brand" href="#">
-            <img src="../static/images/logo.png" width="50" height="50" class="d-inline-block align-top" alt="Small Logo">
+            <img src="../images/logo.png" width="50" height="50" class="d-inline-block align-top" alt="Small Logo">
             {% if "personal" not in model %}
                 <span style="color: black;">LA2I</span>
             {% else %}
@@ -77,6 +77,10 @@
                 <option value="italian" {% if language == 'italian' %} selected {% endif %}>Italian</option>
                 <option value="english" {% if language == 'english' %} selected {% endif %}>English</option>
             </select>
+            <div class="setting-options-section">
+                <label for="toggle-physics">Toggle Physics:</label>
+                <input type="checkbox" class="form-settings-control" id="toggle-physics" {% if physics %} checked {% endif %}>
+            </div>
         </div>
     </div>
     
@@ -152,6 +156,7 @@
 
     <!-- Add your JavaScript code here -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.1/html2pdf.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
 </body>

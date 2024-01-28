@@ -26,6 +26,8 @@ chromadb = "^0.4.22"
 tiktoken = "^0.5.2"
 faiss-cpu = "^1.7.4"
 pymupdf = "^1.23.17"
+pyvis-network = "^0.0.6"
+pyvis = "^0.3.2"
 
 
 [build-system]

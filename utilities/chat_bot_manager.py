@@ -17,8 +17,17 @@ system_message_en="Your role is to be a helpful assistant with a friendly, "\
     "if you cannot retrieve any information from the [context] use your knowledge. "\
     "[context] {context}"
 
+system_message_en_nolimits="Your role is to be a helpful assistant with a friendly, "\
+    "understanding, patient, and user-affirming tone. "\
+    "If the user provides affirmative or brief responses, "\
+    "take the initiative to continue with relevant information. "\
+    "Provide examples or metaphors if the user doesn't understand. "\
+    "Use the following additional [context] below (if present) to retrieve information; "\
+    "if you cannot retrieve any information from the [context] use your knowledge. "\
+    "[context] {context}"
+
 system_message_it="Il tuo ruolo è essere un assistente disponibile con un tono amichevole, "\
-    ", comprensivo, paziente e affermativo nei confronti dell'utente. Dovresti "\
+    "comprensivo, paziente e affermativo nei confronti dell'utente. Dovresti "\
     "spiegare argomenti in frasi brevi e semplici, "\
     "mantenendo le spiegazioni in massimo 2 o 3 frasi. "\
     "Se l'utente fornisce risposte affermative o brevi, "\
@@ -28,6 +37,15 @@ system_message_it="Il tuo ruolo è essere un assistente disponibile con un tono 
     "Usa elenchi ordinati o non ordinati "\
     "(se più lunghi di 2 elementi, introducili uno alla volta e verifica la comprensione prima di procedere) "\
     "o testo semplice nelle risposte "\
+    "Fornisci esempi o metafore se l'utente non comprende. "\
+    "Utilizza le seguenti informazioni aggiuntive dal [context] (se presente) per recuperare informazioni; "\
+    "se non riesci a recuperare alcuna informazione dal [context], usa le tue conoscenze "\
+    "[context] {context}"
+
+system_message_it_nolimits="Il tuo ruolo è essere un assistente disponibile con un tono amichevole, "\
+    "comprensivo, paziente e affermativo nei confronti dell'utente. "\
+    "Se l'utente fornisce risposte affermative o brevi, "\
+    "prendi l'iniziativa di continuare con informazioni pertinenti. "\
     "Fornisci esempi o metafore se l'utente non comprende. "\
     "Utilizza le seguenti informazioni aggiuntive dal [context] (se presente) per recuperare informazioni; "\
     "se non riesci a recuperare alcuna informazione dal [context], usa le tue conoscenze "\
@@ -63,32 +81,41 @@ class ChatBotManager:
 
     def __init__(self, language, model, messages, vectordb=None):
         self.rolling = rolling
-        self.messages = messages
-
         self.language=language
-        self.system_message=system_message_en
+        self.model = model
+        self.messages = messages
         if self.language=='italian':
-            self.system_message=system_message_it
+            if 'personal' in self.model:                
+                self.system_message=system_message_it
+                #print("personal-it")
+            else:
+                self.system_message=system_message_it_nolimits
+                #print("nolimits-it")
+        else:
+            if 'personal' in self.model:                
+                self.system_message=system_message_en
+                #print("personal-en")
+            else:
+                self.system_message=system_message_en_nolimits
+                #print("nolimits-en")
         self.client = OpenAI()
         self.embeddings = OpenAIEmbeddings()
-        self.model = model
         self.temperature = 0
         self.vectordb = vectordb
+
+        if self.messages is None:
+            #print("SET SYSTEM")
+            self.messages = [{"role": "system", "content": self.system_message}]
         
     def handle_message(self, user_message):
         self.messages.append({"role": "user", "content": user_message})
         
-        # if self.retriever:
-        #     docs=self.retriever.get_relevant_documents(user_message)
-        #     #print(docs[0])
-        #     updated_system_message=self.system_message.replace("{context}", docs[0].page_content)
-        #     self.messages[0]["content"]=updated_system_message
         if self.vectordb:
             docs=self.vectordb.similarity_search_with_relevance_scores(user_message)
             result=docs[0][0].page_content+"\n\n"+docs[1][0].page_content
             updated_system_message=self.system_message.replace("{context}", result)
             self.messages[0]["content"]=updated_system_message
-        
+        #print(self.messages)
         #bot_response = "This is a fake bot response: "+user_message
         response = self.client.chat.completions.create(
             model=self.model,

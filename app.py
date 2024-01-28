@@ -19,9 +19,12 @@ from urllib.parse import urlparse
 from utilities.credentials import *
 
 
+
+
 load_dotenv()
 
-app = Flask(__name__)
+#app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/')
 
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_COOKIE_NAME'] = 'your_session_cookie_name'
@@ -33,24 +36,28 @@ Session(app)
 
 app.register_blueprint(auth_blueprint)  # Register the blueprint
 
-#default_model='gpt-3.5-turbo-0613'
-default_model='gpt-4-0613'
+default_model='gpt-3.5-turbo-0613'
+default_physics=True
+#default_model='gpt-4-0613'
 
 @app.route("/")
 def home():
     if 'user_id' in session:
         model = session.get("model")
-        language = session.get("language")
         if model is None:
             model = default_model
             session["model"] = model
+        language = session.get("language")
         if language is None:
             language = 'english'
             session["language"] = language
-        print("HOME")
+        physics=session.get("physics")
+        if physics is None:
+            physics = default_physics
+            session["physics"] = physics
         print(model)
         print(language)
-        return render_template("chat.html", model=model, language=language)
+        return render_template("chat.html", model=model, language=language, physics=physics)
     else:
         return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
 
@@ -74,14 +81,6 @@ def chat():
         session["language"] = language
     
     messages = session.get("messages")
-
-    system_message=system_message_en
-    if language=='italian':
-        system_message=system_message_it
-    if messages is None:
-        messages = [{"role": "system", "content": system_message}]
-        session["messages"] = messages
-
     persist_directory=session.get("retriever")
 
     retriever=None
@@ -99,6 +98,12 @@ def chat():
         messages=messages,
         vectordb=vectordb)
         #retriever=retriever)
+
+    if messages is None:
+        # print("HERE ARE THE MESSAGES")
+        # print(chat_bot_manager.messages)
+        session["messages"]=chat_bot_manager.messages
+    
     bot_response = chat_bot_manager.handle_message(user_message)
 
     return jsonify({"bot_response": bot_response})
@@ -287,6 +292,16 @@ def update_language():
     print(session.get("language"))
     return jsonify({'language': session.get("language")})
 
+@app.route('/update_physics', methods=['POST'])
+def update_physics():
+    physicsEnabled = request.json['physics']
+    if physicsEnabled:
+        session["physics"] = True
+    else:
+        session["physics"] = False
+    print(session.get("physics"))
+    return jsonify({'physics': session.get("physics")})
+
 @app.route('/clear_history', methods=['POST'])
 def clear_chat_history():
     session['messages'] = []  # Clear the chat messages in the session
@@ -364,6 +379,50 @@ def mindmap_with_content():
     encoded_image = base64.b64encode(image_content).decode("utf-8")
     return {"image_content": encoded_image}
 
+@app.route("/mindmap_enhanced", methods=["POST"])
+def mindmap_enhanced():
+
+    import networkx as nx
+    from pyvis.network import Network
+    import matplotlib.pyplot as plt
+
+    user_id = session.get("user_id")
+    language = session.get("language")
+    physics = session.get("physics")
+
+    if user_id is None:
+        return jsonify({"error": "User not authenticated"}), 401
+    if language is None:
+        language = 'english'
+        session["language"] = language
+    if physics is None:
+        physics = True
+        session["physics"] = physics
+
+    data = request.get_json()
+
+    if 'message' in data:
+        message = data['message']
+    if message is None:
+        return jsonify({"error": "No messages available"}), 404
+    #print(message)
+
+    type='small'
+    if 'type' in data:
+        type = data['type']
+    print(type)
+
+    nt = generateInteractiveMindMap(
+        language=language,
+        type=type,
+        text=message,
+        physics=physics)
+
+    html=nt.generate_html()
+    #print(html)
+    #nt.show("nx.html",notebook=False)
+
+    return jsonify({"success": True, "html": html}), 200
 
 
 @app.route("/get_summary", methods=["GET"])
@@ -644,5 +703,5 @@ def test():
     
 
 if __name__ == "__main__":
-    #app.run(debug=True)
-    app.run("0.0.0.0")
+    app.run(debug=True)
+    #app.run("0.0.0.0")

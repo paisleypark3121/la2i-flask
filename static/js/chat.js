@@ -122,6 +122,15 @@ document.addEventListener("DOMContentLoaded", function () {
             num_lines=0
         }
           
+        async function generateHTMLIframe(name, iframeCounter, iframeContent) {
+            const iframeFileName = `${name}_${iframeCounter}.html`;
+            const iframeBlob = new Blob([iframeContent], { type: 'text/html' });
+            const iframeWritableStream = await window.showSaveFilePicker({ suggestedName: iframeFileName });
+            const iframeStream = await iframeWritableStream.createWritable();
+            await iframeStream.write(iframeBlob);
+            await iframeStream.close();      
+            alert("Map for "+iframeFileName+" saved as PDF successfully!");      
+        }
 
         try {
             const options = {
@@ -141,14 +150,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const chatHistory = document.getElementById("chat-history");
 
+            let iframeCounter=1
+
             // Iterate through chat history elements
             for (const element of chatHistory.children) {
+                //console.log(element.tagName)
                 if (element.classList.contains("user-message") || element.classList.contains("assistant-message")) {
                     textContent = element.textContent.trim();
                     addText(doc, textContent);
                 } else if (element.classList.contains("mindmap-image")) {
                     imageData = await getImageDataFromBase64(element.src);
                     addImage(doc, imageData);
+                } else if (element.tagName === "IFRAME") {
+                    const iframeContent = element.getAttribute('srcdoc');
+                    generateHTMLIframe(fileHandle.name,iframeCounter,iframeContent)
+                    iframeCounter++;
                 }
             }
             
@@ -202,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const chatForm = document.getElementById("chat-form");
-    chatForm.addEventListener("submit", function (e) {
+    chatForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const userMessage = userMessageInput.value;
@@ -212,11 +228,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Display user's message in chat history
         appendMessage("User", userMessage);
-
-        // Send user's message to the server
+    
         sendUserMessage(userMessage);
 
-        // Clear the input field
         userMessageInput.value = "";
     });
 
@@ -280,33 +294,63 @@ document.addEventListener("DOMContentLoaded", function () {
             loadingModal.show();
         
             try {
-                // Make a fetch request to your mind map image endpoint
-                const response = await fetch("/mindmap_with_content", {
+
+                const response = await fetch("/mindmap_enhanced", {
                     method: "POST", // Assuming you want to send the message content as a POST request
                     headers: {
                         "Content-Type": "application/json", // Set the appropriate content type
                     },
                     body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
                 });
-        
+
                 if (response.ok) {
                     const data = await response.json();
-                    const encodedImage = data.image_content;
-        
-                    // Create a new image element
-                    const mindmapImage = document.createElement("img");
-                    mindmapImage.classList.add("mindmap-image");
-                    mindmapImage.src = "data:image/png;base64," + encodedImage;
-                    mindmapImage.alt = "Mind Map Image";
-        
-                    // Append the image element to the chat-history div
+                    const htmlContent = data.html;
+
+                    const iframe = document.createElement("iframe");
+    
+                    iframe.style.width = "100%";
+                    iframe.srcdoc = htmlContent;
+
+                    // Add an event listener to adjust the iframe's height after it loads
+                    iframe.addEventListener("load", function() {
+                        this.style.height = this.contentWindow.document.body.scrollHeight + "px";
+                    });
+
                     const chatHistoryDiv = document.getElementById("chat-history");
-                    chatHistoryDiv.appendChild(mindmapImage);
+                    chatHistoryDiv.appendChild(iframe);
 
                 } else {
-                    // Handle error
                     console.error("Error fetching mind map image");
                 }
+
+                // // Make a fetch request to your mind map image endpoint
+                // const response = await fetch("/mindmap_with_content", {
+                //     method: "POST", // Assuming you want to send the message content as a POST request
+                //     headers: {
+                //         "Content-Type": "application/json", // Set the appropriate content type
+                //     },
+                //     body: JSON.stringify({ message: messageContent, type: "small" }), // Send the message content as JSON data
+                // });
+        
+                // if (response.ok) {
+                //     const data = await response.json();
+                //     const encodedImage = data.image_content;
+        
+                //     // Create a new image element
+                //     const mindmapImage = document.createElement("img");
+                //     mindmapImage.classList.add("mindmap-image");
+                //     mindmapImage.src = "data:image/png;base64," + encodedImage;
+                //     mindmapImage.alt = "Mind Map Image";
+        
+                //     // Append the image element to the chat-history div
+                //     const chatHistoryDiv = document.getElementById("chat-history");
+                //     chatHistoryDiv.appendChild(mindmapImage);
+
+                // } else {
+                //     // Handle error
+                //     console.error("Error fetching mind map image");
+                // }
             } catch (error) {
                 console.error("An error occurred:", error);
             } finally {
@@ -336,33 +380,62 @@ document.addEventListener("DOMContentLoaded", function () {
             loadingModal.show();
         
             try {
-                // Make a fetch request to your mind map image endpoint
-                const response = await fetch("/mindmap_with_content", {
+
+                const response = await fetch("/mindmap_enhanced", {
                     method: "POST", // Assuming you want to send the message content as a POST request
                     headers: {
                         "Content-Type": "application/json", // Set the appropriate content type
                     },
                     body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
                 });
-        
+
                 if (response.ok) {
                     const data = await response.json();
-                    const encodedImage = data.image_content;
-        
-                    // Create a new image element
-                    const mindmapImage = document.createElement("img");
-                    mindmapImage.classList.add("mindmap-image");
-                    mindmapImage.src = "data:image/png;base64," + encodedImage;
-                    mindmapImage.alt = "Mind Map Image";
-        
-                    // Append the image element to the chat-history div
+                    const htmlContent = data.html;
+
+                    const iframe = document.createElement("iframe");
+    
+                    iframe.style.width = "100%";
+                    iframe.srcdoc = htmlContent;
+
+                    // Add an event listener to adjust the iframe's height after it loads
+                    iframe.addEventListener("load", function() {
+                        this.style.height = this.contentWindow.document.body.scrollHeight + "px";
+                    });
+
                     const chatHistoryDiv = document.getElementById("chat-history");
-                    chatHistoryDiv.appendChild(mindmapImage);
+                    chatHistoryDiv.appendChild(iframe);
 
                 } else {
-                    // Handle error
                     console.error("Error fetching mind map image");
                 }
+                // Make a fetch request to your mind map image endpoint
+                // const response = await fetch("/mindmap_with_content", {
+                //     method: "POST", // Assuming you want to send the message content as a POST request
+                //     headers: {
+                //         "Content-Type": "application/json", // Set the appropriate content type
+                //     },
+                //     body: JSON.stringify({ message: messageContent, type: "large" }), // Send the message content as JSON data
+                // });
+        
+                // if (response.ok) {
+                //     const data = await response.json();
+                //     const encodedImage = data.image_content;
+        
+                //     // Create a new image element
+                //     const mindmapImage = document.createElement("img");
+                //     mindmapImage.classList.add("mindmap-image");
+                //     mindmapImage.src = "data:image/png;base64," + encodedImage;
+                //     mindmapImage.alt = "Mind Map Image";
+        
+                //     // Append the image element to the chat-history div
+                //     const chatHistoryDiv = document.getElementById("chat-history");
+                //     chatHistoryDiv.appendChild(mindmapImage);
+
+                // } else {
+                //     // Handle error
+                //     console.error("Error fetching mind map image");
+                // }
             } catch (error) {
                 console.error("An error occurred:", error);
             } finally {
@@ -463,23 +536,55 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
         
-    function sendUserMessage(message) {
-        fetch("/chat", {
-            method: "POST",
-            body: new URLSearchParams({ user_message: message }),
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            // Handle the server response and display it in the chat history
-            const botResponse = data.bot_response;
+    async function sendUserMessage(message) {
+
+        const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
+        loadingModal.show();
+
+        botResponse=""
+        try {
+            // Make a fetch request to your mind map image endpoint
+            const response = await fetch("/chat", {
+                method: "POST",
+                body: new URLSearchParams({ user_message: message }),
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            })
+    
+            if (response.ok) {
+                const data = await response.json();
+                botResponse=data.bot_response;
+            } else {
+                // Handle error
+                console.error("Error fetching mind map image");
+            }
+        } catch (error) {
+            console.error("An error occurred:", error);
+        } finally {
+            // Hide the loading modal after the response is received or an error occurs
+            loadingModal.hide();
+        }
+
+        if (botResponse)
             appendMessage("Assistant", botResponse); // Display the bot's response
-        })
-        .catch((error) => {
-            console.error("Error sending message:", error);
-        });
+        
+        // fetch("/chat", {
+        //     method: "POST",
+        //     body: new URLSearchParams({ user_message: message }),
+        //     headers: {
+        //         "Content-Type": "application/x-www-form-urlencoded",
+        //     },
+        // })
+        // .then((response) => response.json())
+        // .then((data) => {
+        //     // Handle the server response and display it in the chat history
+        //     const botResponse = data.bot_response;
+        //     appendMessage("Assistant", botResponse); // Display the bot's response
+        // })
+        // .catch((error) => {
+        //     console.error("Error sending message:", error);
+        // });
     }
 
     const stickyButton = document.getElementById("sticky-button");
@@ -900,3 +1005,42 @@ settingOptionsSelect.addEventListener("change", function() {
         console.error(error);
     });
 });
+
+// Get a reference to the checkbox element
+const togglePhysicsCheckbox = document.getElementById('toggle-physics');
+
+// Add an event listener to the checkbox for change events
+togglePhysicsCheckbox.addEventListener('change', function () {
+    // Determine whether the checkbox is checked (physics enabled) or unchecked (physics disabled)
+    const physicsEnabled = togglePhysicsCheckbox.checked;
+
+    // Create a request payload with the physics status
+    const requestBody = JSON.stringify({ physics: physicsEnabled });
+
+    // Configure the fetch request
+    const requestOptions = {
+        method: 'POST',
+        body: requestBody,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    // Perform the fetch request to update the physics status
+    fetch('/update_physics', requestOptions)
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error('Errore nella richiesta.');
+            }
+            return response.text();
+        })
+        .then(function (data) {
+            // Handle the response from the server (you can do something here if needed)
+            console.log(data);
+        })
+        .catch(function (error) {
+            // Handle any errors here
+            console.error(error);
+        });
+});
+

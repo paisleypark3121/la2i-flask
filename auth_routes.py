@@ -37,5 +37,6 @@ def render_login_page():
 # Route to log the user out
 @auth_blueprint.route("/logout")
 def logout():
-    session.pop('user_id', None)
+    #session.pop('user_id', None)
+    session.clear()
     return redirect(url_for('auth.login'))  # Use 'auth.login' as the endpoint

@@ -12,6 +12,7 @@
     background-color: #cce8f4; /* Set a background color for user messages */
 }
 
+
 /* CSS styles for bot messages */
 .assistant-message {
     text-align: left;
@@ -36,10 +37,10 @@
 
 /* CSS styles for the chat history container */
 .chat-history {
-    max-height: 300px; /* Set the maximum height as needed */
-    overflow-y: auto; /* Enable vertical scrollbar when content overflows */
-    border: 1px solid #ccc; /* Optional: Add a border for a visual boundary */
-    padding: 10px; /* Optional: Add padding for spacing */
+    max-height: 500px;
+    overflow-y: auto; 
+    border: 1px solid #ccc; 
+    padding: 10px;  
 }
 
 .setting-section {
@@ -66,9 +67,6 @@
     margin-bottom: 10px;
 } */
 
-.user-message {
-    width: 100%;
-}
 
 .chat-options-section {
     background-color: #f0fafe; /* Light gray background color */
