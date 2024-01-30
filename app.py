@@ -61,7 +61,6 @@ def home():
     else:
         return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
 
-
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.form.get("user_message") 
@@ -215,7 +214,6 @@ def transcribe_youtube():
     except Exception as e:
         return jsonify({"success": False, "message": f"YouTube transcription failed: {str(e)}"}), 500
 
-
 # Modify the server-side code to handle the updated data structure
 @app.route("/generate_chromadb", methods=["POST"])
 def generate_chromadb():
@@ -264,7 +262,6 @@ def generate_chromadb():
 
     session["retriever"] = persist_directory
     return jsonify({"success": True, "message": "Retriever created and stored"}), 200
-
 
 @app.route('/update_option', methods=['POST'])
 def update_option():

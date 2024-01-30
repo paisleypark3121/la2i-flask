@@ -34,7 +34,7 @@
                     <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         USER
                     </a>
-                    <ul class="submenu dropdown-menu" aria-labelledby="navbarDropdown">
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item text-success" href="#" id="settings-menu">Settings</a></li>
                         <li><a class="dropdown-item text-danger" href="#" id="logout-link">Logout</a></li>
                     </ul>
@@ -71,16 +71,16 @@
     </script> -->
 
     <div id="setting-section" class="setting-section">
-        <div class="setting-options-section"></div>
+        <div class="language-setting">
             <label for="setting-options">Language:</label>
             <select class="form-settings-control" id="setting-options">
                 <option value="italian" {% if language == 'italian' %} selected {% endif %}>Italian</option>
                 <option value="english" {% if language == 'english' %} selected {% endif %}>English</option>
             </select>
-            <div class="setting-options-section">
-                <label for="toggle-physics">Toggle Physics:</label>
-                <input type="checkbox" class="form-settings-control" id="toggle-physics" {% if physics %} checked {% endif %}>
-            </div>
+        </div>
+        <div class="physics-setting">
+            <label for="toggle-physics">Toggle Physics:</label>
+            <input type="checkbox" class="form-settings-control" id="toggle-physics" {% if physics %} checked {% endif %}>
         </div>
     </div>
     
@@ -155,6 +155,8 @@
     </div>
 
     <!-- Add your JavaScript code here -->
+    <script src="https://unpkg.com/popper.js@1"></script>
+    <script src="https://unpkg.com/tippy.js@5"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.8.1/html2pdf.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>

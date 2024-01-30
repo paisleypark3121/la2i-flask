@@ -5,6 +5,36 @@ document.addEventListener("DOMContentLoaded", function () {
     //     console.log("Message received from the child: " + event.data); // Message received from child
     // });
 
+    tippy('#clear-history-button', {
+        content: 'clear all conversation and context',
+        delay: [2000, 0]
+    });
+
+    tippy('#save-history-button', {
+        content: 'save all conversation',
+        delay: [2000, 0]
+    });
+
+    tippy('#mic-button', {
+        content: 'speech to text',
+        delay: [2000, 0]
+    });
+
+    tippy('#send-button', {
+        content: 'send message',
+        delay: [2000, 0]
+    });
+
+    tippy('#add-button', {
+        content: 'add file / url to the context library',
+        delay: [2000, 0]
+    });
+
+    tippy('#generate-button', {
+        content: 'generate vector database for the context',
+        delay: [2000, 0]
+    });
+
     const navbar = document.getElementById("navbarNav");
     const settingSection = document.getElementById("setting-section");
     const chatSection = document.getElementById("chat-section");
@@ -28,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const userMessageInput = document.getElementById("user-message");
     userMessageInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
-            if (e.ctrlKey || e.metaKey) {
+            if (e.shiftKey || e.metaKey) {
                 // CTRL+ENTER (or Command+ENTER on Mac) should perform a carriage return
                 const textarea = e.target;
                 const start = textarea.selectionStart;
@@ -352,7 +382,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("mic-button").classList.add("btn-danger");
         }
     });
-    
+
     // Handle speech recognition results
     recognition.onresult = function (event) {
         const result = event.results[event.results.length - 1][0].transcript;
@@ -858,7 +888,7 @@ function appendMessage(sender, message) {
     });
 
     const mm2Button = document.createElement("button");
-    mm2Button.className = "btn btn-primary mindmap-button";
+    mm2Button.className = "btn btn-primary mindmap2-button";
     const svg_mm2_HTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-3-fill" viewBox="0 0 16 48">
         <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zm-6 8A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm6 0A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>
@@ -942,43 +972,6 @@ function appendMessage(sender, message) {
         }
     });
 
-    // mmButton.addEventListener("click", async () => {
-    //     // Show the loading modal
-    //     const loadingModal = new bootstrap.Modal(document.getElementById("loading-modal"), { backdrop: "static", keyboard: false });
-    //     loadingModal.show();
-    
-    //     try {
-    //         // Make a fetch request to your mind map image endpoint
-    //         const response = await fetch("/mindmap", {
-    //             method: "GET",
-    //         });
-    
-    //         if (response.ok) {
-    //             const data = await response.json();
-    //             const encodedImage = data.image_content;
-    
-    //             // Create a new image element
-    //             const mindmapImage = document.createElement("img");
-    //             mindmapImage.classList.add("mindmap-image");
-    //             mindmapImage.src = "data:image/png;base64," + encodedImage;
-    //             mindmapImage.alt = "Mind Map Image";
-    
-    //             // Append the image element to the chat-history div
-    //             const chatHistoryDiv = document.getElementById("chat-history");
-    //             chatHistoryDiv.appendChild(mindmapImage);
-
-    //         } else {
-    //             // Handle error
-    //             console.error("Error fetching mind map image");
-    //         }
-    //     } catch (error) {
-    //         console.error("An error occurred:", error);
-    //     } finally {
-    //         // Hide the loading modal after the response is received or an error occurs
-    //         loadingModal.hide();
-    //     }
-    // });
-    
     ttsButton.addEventListener("click", () => {
         // Call your text-to-speech function here
         performTextToSpeech(message);
@@ -996,6 +989,21 @@ function appendMessage(sender, message) {
         messageElement.appendChild(ttsButton);
         messageElement.appendChild(mmButton);
         messageElement.appendChild(mm2Button);
+
+        tippy(ttsButton, {
+            content: 'text to speech',
+            delay: [2000, 0]
+        });
+
+        tippy(mmButton, {
+            content: 'generate small concept map',
+            delay: [2000, 0]
+        });
+
+        tippy(mm2Button, {
+            content: 'generate large concept map',
+            delay: [2000, 0]
+        });
         
     } else {
         messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
@@ -1096,3 +1104,4 @@ window.addEventListener("message", function(event) {
         userMessageInput.value = "";
     } 
 });
+

@@ -35,6 +35,11 @@
     height: 34px;
 }
 
+.mindmap2-button {
+    margin-left: 10px;
+    height: 34px;
+}
+
 /* CSS styles for the chat history container */
 .chat-history {
     max-height: 500px;
@@ -130,7 +135,7 @@ ul li a {
     color: #333;
 }
 
-ul li ul.submenu {
+/* ul li ul.submenu {
     display: none;
     position: absolute;
     background-color: #fff;
@@ -152,7 +157,7 @@ ul li ul.submenu li a {
 
 ul li ul.submenu li a:hover {
     background-color: #f2f2f2;
-}
+} */
 
 /* Style for vertical list items */
 .vertical-list {
