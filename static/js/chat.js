@@ -454,15 +454,26 @@ chatOptionsSelect.addEventListener("change", function() {
         console.log(data);
 
         // Find the <a> element by its id
-        var navbarLabel = document.getElementById("navbar-label");
+        // var navbarLabel = document.getElementById("navbar-label");
+
+        // // Update the label based on the server response
+        // if (data === 'gpt-3.5-turbo-0613') {
+        //     navbarLabel.textContent = "LA2I";
+        //     navbarLabel.style.color = "black";
+        // } else {
+        //     navbarLabel.textContent = "LA2I*";
+        //     navbarLabel.style.color = "red";
+        // }
+        
+        var span_la = document.getElementById("span_la");
 
         // Update the label based on the server response
         if (data === 'gpt-3.5-turbo-0613') {
-            navbarLabel.textContent = "LA2I";
-            navbarLabel.style.color = "black";
+            span_la.textContent = "LA2I";
+            span_la.style.color = "black";
         } else {
-            navbarLabel.textContent = "LA2I*";
-            navbarLabel.style.color = "red";
+            span_la.textContent = "LA2I*";
+            span_la.style.color = "red";
         }
     })
     .catch(function(error) {
