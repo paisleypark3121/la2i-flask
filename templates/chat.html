@@ -72,14 +72,14 @@
 
     <div id="setting-section" class="setting-section">
         <div class="language-setting">
-            <label for="setting-options">Language:</label>
+            <label for="setting-options" id="language-setting-options">Language:</label>
             <select class="form-settings-control" id="setting-options">
                 <option value="italian" {% if language == 'italian' %} selected {% endif %}>Italian</option>
                 <option value="english" {% if language == 'english' %} selected {% endif %}>English</option>
             </select>
         </div>
         <div class="physics-setting">
-            <label for="toggle-physics">Toggle Physics:</label>
+            <label for="toggle-physics" id="label-toggle-physics">Toggle Physics:</label>
             <input type="checkbox" class="form-settings-control" id="toggle-physics" {% if physics %} checked {% endif %}>
         </div>
     </div>
@@ -94,20 +94,20 @@
         </div>
         
         <div class="add-section">
-            <h6>Add Files or URLs</h6>
+            <h6 id="add_files_or_url">Add Files or URLs</h6>
             <div class="add-files-section">
-                <label for="file-input">Choose a .txt or .pdf file:</label>
+                <label id="label_file_input" for="file-input">Choose a .txt or .pdf file:</label>
                 <input type="file" class="form-control" id="file-input" accept=".txt,.pdf" >
             </div>
             <div class="add-url-section">
-                <label for="url-input">Type the URL:</label>
+                <label id="label_url_input" for="url-input">Type the URL:</label>
                 <input type="text" class="form-control" id="url-input" placeholder="Type the URL">
             </div>
             <button class="btn btn-primary" id="add-button">Add</button>
         </div>
 
         <div id="item-list-section" class="item-list-section">
-            <h6>Item List</h6>
+            <h6 id="heading_item_list">Item List</h6>
             <ul id="item-list" class="list-group vertical-list"></ul>
             <button class="btn btn-success generate-button" id="generate-button">Generate</button>
         </div>

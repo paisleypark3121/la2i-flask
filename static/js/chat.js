@@ -8,14 +8,19 @@ document.addEventListener("DOMContentLoaded", function () {
     //     console.log("Message received from the child: " + event.data); // Message received from child
     // });
 
+    // language management
+    var settingOptionsSelect = document.getElementById("setting-options");
+    selectVoiceByLanguage(settingOptionsSelect.value);
+    set_labels(settingOptionsSelect.value)
+
     //#region tippy
     tippy('#clear-history-button', {
-        content: 'clear all conversation and context',
+        content: settingOptionsSelect.value === 'italian' ? 'cancella tutta la conversazione ed il contesto' : 'clear all conversation and context',
         delay: [2000, 0]
     });
 
     tippy('#save-history-button', {
-        content: 'save all conversation',
+        content: settingOptionsSelect.value === 'italian' ? 'salva tutta la conversazione' : 'save all conversation',
         delay: [2000, 0]
     });
 
@@ -25,17 +30,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     tippy('#send-button', {
-        content: 'send message',
+        content: settingOptionsSelect.value === 'italian' ? 'invia messaggio' : 'send message',
         delay: [2000, 0]
     });
 
     tippy('#add-button', {
-        content: 'add file / url to the context library',
+        content: settingOptionsSelect.value === 'italian' ? 'aggiungi file / url alla libreria':'add file / url to the context library',
         delay: [2000, 0]
     });
 
     tippy('#generate-button', {
-        content: 'generate vector database for the context',
+        content: settingOptionsSelect.value === 'italian' ? 'genera il vector database per il contesto':'generate vector database for the context',
         delay: [2000, 0]
     });
     //#endregion
@@ -250,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Add a button to remove the item from the list
         const removeButton = document.createElement("button");
         removeButton.textContent = "Remove";
-        removeButton.classList.add("btn", "btn-danger"); 
+        removeButton.classList.add("btn", "btn-danger", "remove-item-from-list"); 
         removeButton.addEventListener("click", function () {
             const index = items.findIndex((x) => x.data === item);
             if (index !== -1) {
@@ -378,8 +383,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("mic-button").classList.add("btn-secondary");
     });
 
-    var settingOptionsSelect = document.getElementById("setting-options");
-    selectVoiceByLanguage(settingOptionsSelect.value);
 });
 //#endregion
 
@@ -494,6 +497,7 @@ settingOptionsSelect.addEventListener("change", function() {
     .then(function(data) {
         selectedLanguage = selectedValue;
         selectVoiceByLanguage(selectedValue);
+        set_labels(selectedLanguage)
         console.log(data);
     })
     .catch(function(error) {
@@ -501,6 +505,59 @@ settingOptionsSelect.addEventListener("change", function() {
         console.error(error);
     });
 });
+
+function set_labels(language) {
+    const sendButton = document.getElementById('send-button');
+    sendButton.textContent = 'Send';
+    if (language=="italian")
+        sendButton.textContent = 'Invia';
+    const saveButton = document.getElementById('save-history-button')
+    saveButton.textContent = 'Save';
+    if (language=="italian")
+        saveButton.textContent = 'Salva';
+    const clearButton = document.getElementById('clear-history-button')
+    clearButton.textContent = 'Clear';
+    if (language=="italian")
+        clearButton.textContent = 'Pulisci';
+    const label_language_setting = document.getElementById('language-setting-options')
+    label_language_setting.textContent = 'Language';
+    if (language=="italian")
+        label_language_setting.textContent = 'Lingua';
+    const label_toggle_physics = document.getElementById('label-toggle-physics')
+    label_toggle_physics.textContent = 'Toggle Physics';
+    if (language=="italian")
+        label_toggle_physics.textContent = 'Attivazione Fisica';
+    const add_files_or_url = document.getElementById('add_files_or_url')
+    add_files_or_url.textContent = 'Add files or URLs';
+    if (language=="italian")
+        add_files_or_url.textContent = 'Aggingi File o URLs';
+    const addButton = document.getElementById('add-button');
+    addButton.textContent = 'Add';
+    if (language=="italian")
+        addButton.textContent = 'Aggiungi';
+    const heading_item_list = document.getElementById('heading_item_list');
+    heading_item_list.textContent = 'Item List';
+    if (language=="italian")
+        heading_item_list.textContent = 'Libreria';
+    const generateButton = document.getElementById('generate-button');
+    generateButton.textContent = 'Generate';
+    if (language=="italian")
+        generateButton.textContent = 'Genera';
+    const label_file_input = document.getElementById('label_file_input')
+    label_file_input.textContent = 'Choose a .txt or .pdf file';
+    if (language=="italian")
+        label_file_input.textContent = 'Scegli un file .txt o .pdf';
+    const label_url_input = document.getElementById('label_url_input')
+    label_url_input.textContent = 'Type the URL';
+    if (language=="italian")
+        label_url_input.textContent = 'Digita la URL';
+    const remove_item_from_list = document.getElementsByClassName('remove-item-from-list')
+    remove_item_from_list.textContent = 'Remove';
+    if (language=="italian")
+        remove_item_from_list.textContent = 'Elimina';
+
+        
+}
 
 const togglePhysicsCheckbox = document.getElementById('toggle-physics');
 togglePhysicsCheckbox.addEventListener('change', function () {
@@ -749,10 +806,10 @@ function selectVoiceByLanguage(language) {
         }
 
         if (selectedVoice) {
-            test="Hello, this is a test"
-            if (language=="italian")
-                test="Ciao, questo è un test"
-            performTextToSpeech(test);
+            // test="Hello, this is a test"
+            // if (language=="italian")
+            //     test="Ciao, questo è un test"
+            // performTextToSpeech(test);
         } else {
             console.log("Voice for the selected language not found.");
         }
