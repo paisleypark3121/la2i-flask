@@ -1,10 +1,14 @@
-// JavaScript code to handle chat interactions
+let voices=[]
+let selectedVoice = null;
+
+// #region DOMContentLoaded
 document.addEventListener("DOMContentLoaded", function () {
 
     // window.addEventListener('message', function(event) {
     //     console.log("Message received from the child: " + event.data); // Message received from child
     // });
 
+    //#region tippy
     tippy('#clear-history-button', {
         content: 'clear all conversation and context',
         delay: [2000, 0]
@@ -34,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         content: 'generate vector database for the context',
         delay: [2000, 0]
     });
+    //#endregion
 
     const navbar = document.getElementById("navbarNav");
     const settingSection = document.getElementById("setting-section");
@@ -46,14 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
             settingSection.style.display = "none";
         }
     });
-
-    // const userMessageInput = document.getElementById("user-message");
-    // userMessageInput.addEventListener("keydown", function (e) {
-    //     if (e.ctrlKey && e.key === "Enter") {
-    //         e.preventDefault(); // Prevent the default behavior (newline in textarea)
-    //         chatForm.dispatchEvent(new Event("submit")); // Dispatch a submit event on the form
-    //     }
-    // });
 
     const userMessageInput = document.getElementById("user-message");
     userMessageInput.addEventListener("keydown", function (e) {
@@ -94,26 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     enableButtonsIfNotEmpty()
-
-    // Function to perform text-to-speech
-    function performTextToSpeech(text) {
-        // Check if the browser supports the SpeechSynthesis API
-        if ('speechSynthesis' in window) {
-            const speechSynthesis = window.speechSynthesis;
-            const utterance = new SpeechSynthesisUtterance(text);
     
-            // Configure speech options (e.g., voice, rate, pitch, etc.)
-            // utterance.voice = ...;
-            // utterance.rate = ...;
-            // utterance.pitch = ...;
-    
-            // Start the text-to-speech synthesis
-            speechSynthesis.speak(utterance);
-        } else {
-            console.log('Text-to-speech not supported in this browser.');
-        }
-    }
-        
     const stickyButton = document.getElementById("sticky-button");
     stickyButton.addEventListener("click", async () => {        
             
@@ -138,23 +116,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Get references to HTML elements
+    // #region adding element
     const fileInput = document.getElementById("file-input");
     const urlInput = document.getElementById("url-input");
-    const addButton = document.getElementById("add-button");
-    const itemListSection = document.getElementById("item-list-section");
-    const itemList = document.getElementById("item-list");
     const generateButton = document.getElementById("generate-button");
-
-    // Create an array to hold the items
     const items = [];
-
+    const addButton = document.getElementById("add-button");
     addButton.addEventListener("click", function (e) {
         e.preventDefault();
     
-        const file = fileInput.files[0]; // Get the selected file
+        const file = fileInput.files[0];
         const url = urlInput.value.trim();
-    
+
         if (file) {
             const formData = new FormData();
             formData.append("file", file);
@@ -263,8 +236,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+    //#endregion
 
-    // Function to add an item to the list
+    const itemListSection = document.getElementById("item-list-section");
+    const itemList = document.getElementById("item-list");
     function addItemToList(item, itemType) {
         const listItem = document.createElement("li");
         listItem.textContent = item;
@@ -403,9 +378,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("mic-button").classList.add("btn-secondary");
     });
 
+    var settingOptionsSelect = document.getElementById("setting-options");
+    selectVoiceByLanguage(settingOptionsSelect.value);
 });
+//#endregion
 
-// Add a click event listener for the "Logout" link
 document.getElementById("logout-link").addEventListener("click", function (event) {
     event.preventDefault(); // Prevent the default link behavior
 
@@ -428,7 +405,6 @@ document.getElementById("logout-link").addEventListener("click", function (event
     });
 });
 
-// Add an event listener for the "CHAT" menu item
 document.getElementById("chat-menu").addEventListener("click", function () {
     const chatSection = document.getElementById("chat-section");
     if (chatSection.style.display === "none" || chatSection.style.display === "") {
@@ -438,7 +414,6 @@ document.getElementById("chat-menu").addEventListener("click", function () {
     }
 });
 
-// Add an event listener for the "CHAT" menu item
 document.getElementById("settings-menu").addEventListener("click", function () {
     const settingSection = document.getElementById("setting-section");
     if (settingSection.style.display === "none" || settingSection.style.display === "") {
@@ -448,10 +423,7 @@ document.getElementById("settings-menu").addEventListener("click", function () {
     }
 });
 
-// Ottieni l'elemento select
 var chatOptionsSelect = document.getElementById("chat-options");
-
-// Aggiungi un evento di cambio all'elemento select
 chatOptionsSelect.addEventListener("change", function() {
     //console.log("CHANGE")
     // Ottieni il valore dell'opzione selezionata
@@ -496,10 +468,7 @@ chatOptionsSelect.addEventListener("change", function() {
     });
 });
 
-// Ottieni l'elemento select
 var settingOptionsSelect = document.getElementById("setting-options");
-
-// Aggiungi un evento di cambio all'elemento select
 settingOptionsSelect.addEventListener("change", function() {
     //console.log("CHANGE")
     // Ottieni il valore dell'opzione selezionata
@@ -523,7 +492,8 @@ settingOptionsSelect.addEventListener("change", function() {
         return response.text();
     })
     .then(function(data) {
-        // Gestisci la risposta dal server (puoi fare qualcosa qui, se necessario)
+        selectedLanguage = selectedValue;
+        selectVoiceByLanguage(selectedValue);
         console.log(data);
     })
     .catch(function(error) {
@@ -532,10 +502,7 @@ settingOptionsSelect.addEventListener("change", function() {
     });
 });
 
-// Get a reference to the checkbox element
 const togglePhysicsCheckbox = document.getElementById('toggle-physics');
-
-// Add an event listener to the checkbox for change events
 togglePhysicsCheckbox.addEventListener('change', function () {
     // Determine whether the checkbox is checked (physics enabled) or unchecked (physics disabled)
     const physicsEnabled = togglePhysicsCheckbox.checked;
@@ -570,11 +537,12 @@ togglePhysicsCheckbox.addEventListener('change', function () {
         });
 });
 
+// #region save history
 const saveHistoryButton = document.getElementById("save-history-button");
     saveHistoryButton.addEventListener("click", () => {
         saveChatHistoryAsPDF();
 });
-    
+
 async function saveChatHistoryAsPDF() {
     window.jsPDF = window.jspdf.jsPDF;
 
@@ -703,22 +671,9 @@ async function saveChatHistoryAsPDF() {
         console.error("Error saving PDF:", error);
     }
 };
+//#endregion
 
-// // Helper function to convert base64 image data to Uint8Array
-function getImageDataFromBase64(base64Data) {
-    const dataURI = base64Data.split(",")[1]; // Remove data URI prefix
-    const binaryString = atob(dataURI);
-    const length = binaryString.length;
-    const uintArray = new Uint8Array(length);
-
-    for (let i = 0; i < length; i++) {
-        uintArray[i] = binaryString.charCodeAt(i);
-    }
-
-    return uintArray;
-}
-
-// Add event listener for clearing chat history
+// #region clear history
 function clearHistory() {
     const chatHistory = document.getElementById("chat-history");
     chatHistory.innerHTML = ""; 
@@ -749,7 +704,6 @@ function clearHistory() {
 }
 
 const clearHistoryButton = document.getElementById("clear-history-button");
-
 clearHistoryButton.addEventListener("click", () => {
     const confirmed = window.confirm("Are you sure you want to clear the history?");
     if (confirmed) {
@@ -763,6 +717,72 @@ clearHistoryButton.addEventListener("click", () => {
         });
     }
 });
+//#endregion
+
+// #region SPEECH
+function setVoices() {
+    return new Promise((resolve, reject) => {
+        const synth = window.speechSynthesis;
+        let id;
+        id = setInterval(() => {
+            if (synth.getVoices().length !== 0) {
+                clearInterval(id);
+                voices=synth.getVoices()
+                resolve(voices);
+            }
+        }, 10);
+    });
+}
+
+function selectVoiceByLanguage(language) {
+    setVoices().then(() => {
+        language_voice_name="Microsoft Libby Online (Natural) - English (United Kingdom)"
+        if (language=="italian")
+            language_voice_name="Microsoft Isabella Online (Natural) - Italian (Italy)"
+
+        // Loop through available voices to find the desired voice based on the language
+        for (let i = 0; i < voices.length; i++) {
+            if (voices[i].name === language_voice_name) { // Match voice based on language
+                selectedVoice = voices[i];
+                break;
+            }
+        }
+
+        if (selectedVoice) {
+            test="Hello, this is a test"
+            if (language=="italian")
+                test="Ciao, questo è un test"
+            performTextToSpeech(test);
+        } else {
+            console.log("Voice for the selected language not found.");
+        }
+    });
+}
+
+function performTextToSpeech(text) {
+    const synth = window.speechSynthesis;
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = selectedVoice;
+        synth.speak(utterance);
+    } else {
+        console.log('Text-to-speech not supported in this browser.');
+    }
+}
+// #endregion
+
+function getImageDataFromBase64(base64Data) {
+    const dataURI = base64Data.split(",")[1]; // Remove data URI prefix
+    const binaryString = atob(dataURI);
+    const length = binaryString.length;
+    const uintArray = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+        uintArray[i] = binaryString.charCodeAt(i);
+    }
+
+    return uintArray;
+}
 
 function enableButtonsIfNotEmpty() {
     const chatHistory = document.getElementById("chat-history");
@@ -972,9 +992,19 @@ function appendMessage(sender, message) {
         }
     });
 
+    function countWords(text) {
+        return text.split(/\s+/).filter(word => word.length > 0).length;
+    }
+    
     ttsButton.addEventListener("click", () => {
-        // Call your text-to-speech function here
-        performTextToSpeech(message);
+        if (countWords(message) > 35) {
+            const confirmation = confirm("The text is quite long, do you want me to read it anyway?");
+            if (confirmation) {
+                performTextToSpeech(message);
+            }
+        } else {
+            performTextToSpeech(message);
+        }
     });
 
     ttsButton.style.marginLeft = "10px";

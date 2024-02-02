@@ -197,6 +197,18 @@ def generateMindMap(language,type,text,temperature=0,model_name='gpt-4-0613'):
 
     #return file_name  
 
+def set_linear_edges(input_string):
+    lines = input_string.split("\n")
+    output_lines = []
+
+    for line in lines:
+        if "add_edge" in line:
+            line = line.rstrip().replace(')', ', smooth={"type": "continuous", "enabled": False})')
+        output_lines.append(line)
+
+    output_string = "\n".join(output_lines)
+    return output_string
+
 def generateInteractiveMindMap(
     language,
     type,
@@ -247,6 +259,9 @@ def generateInteractiveMindMap(
         presence_penalty=0
     )
     answer=response.choices[0].message.content
+    if physics==False:
+        answer=set_linear_edges(answer)
+    print(answer)
     local_vars = {}
     exec(answer, globals(), local_vars)
     local_vars['nt'].toggle_physics(physics)
