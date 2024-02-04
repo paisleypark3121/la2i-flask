@@ -261,8 +261,92 @@ def generateInteractiveMindMap(
     answer=response.choices[0].message.content
     if physics==False:
         answer=set_linear_edges(answer)
-    print(answer)
+    #print(answer)
     local_vars = {}
     exec(answer, globals(), local_vars)
     local_vars['nt'].toggle_physics(physics)
+    
+    #networkx_generator(local_vars['nt'])
+
     return local_vars['nt']
+
+
+import networkx as nx
+import matplotlib.pyplot as plt
+
+def pyvis_to_json(nt):
+    nodes=nt.get_nodes()
+    edges=nt.get_edges()
+
+    data = {
+        "nodes": nodes,
+        "labels": edges
+    }
+    json_string = json.dumps(data)
+    #print(json_string)
+    
+    return json_string
+
+def json_to_pyvis(json_string):
+    data = json.loads(json_string)
+
+    nt = Network()
+    for node in data["nodes"]:
+        nt.add_node(node)
+    for edge in data["labels"]:
+        nt.add_edge(edge["from"], edge["to"], label=edge["label"])
+
+    #nt.show("nx.html",notebook=False)
+    return nt
+
+def pyvis_to_networkx(nt):
+    nodes=nt.get_nodes()
+    edges=nt.get_edges()
+
+    nx_graph = nx.Graph()
+    nodes = nt.get_nodes()
+    for node in nodes:
+        nx_graph.add_node(node)
+        
+    edges = nt.get_edges()
+    for edge in edges:
+        from_node = edge['from']
+        to_node = edge['to']
+        label = edge['label']
+        nx_graph.add_edge(from_node, to_node, label=label)
+
+    # layout = nx.spring_layout(nx_graph)
+    # nx.draw(nx_graph, pos=layout, with_labels=True, node_color='skyblue', edge_color='gray')
+    # edge_labels = nx.get_edge_attributes(nx_graph, 'label')
+    # nx.draw_networkx_edge_labels(nx_graph, pos=layout, edge_labels=edge_labels, font_size=8, label_pos=0.5, font_color='black')
+    # #plt.savefig('network.png', format='png', dpi=300)
+
+    return nx_graph
+
+def json_to_image(json_string):
+    try:
+        nt = json_to_pyvis(json_string)
+        nx_graph = pyvis_to_networkx(nt)
+
+        layout = nx.spring_layout(nx_graph)
+        nx.draw(nx_graph, pos=layout, with_labels=True, node_color='skyblue', edge_color='gray')
+        edge_labels = nx.get_edge_attributes(nx_graph, 'label')
+        nx.draw_networkx_edge_labels(nx_graph, pos=layout, edge_labels=edge_labels, font_size=8, label_pos=0.5, font_color='black')
+
+        image_bytes_io = BytesIO()
+        plt.savefig(image_bytes_io, format="png")
+        image_bytes_io.seek(0)
+
+        image_content = image_bytes_io.read()
+        image_bytes_io.close()
+
+        return image_content
+    except Exception as e:
+        print("Error generating PNG image:", str(e))
+        return None
+
+def networkx_generator(nt):
+
+    nx_graph=pyvis_to_networkx(nt)
+    json_string=pyvis_to_json(nt)
+    nt=json_to_pyvis(json_string)

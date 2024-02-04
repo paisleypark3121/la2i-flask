@@ -83,7 +83,17 @@ def mindmap_enhanced():
     #print(html)
     #nt.show("nx.html",notebook=False)
 
-    return jsonify({"success": True, "html": html}), 200
+    json_string=pyvis_to_json(nt)
+
+    return jsonify({"success": True, "html": html, "json_string": json_string}), 200
+
+@mindmap_blueprint.route("/mindmap_json_to_image", methods=["POST"])
+def mindmap_json_to_image():
+    data = request.get_json()
+    json_data = data.get('json_data')
+    image_content=json_to_image(json_data)
+    image_content_base64 = base64.b64encode(image_content).decode('utf-8')
+    return {"image_content": image_content_base64}
 
 # @app.route("/mindmap", methods=["GET", "POST"])
 # def mindmap():

@@ -452,18 +452,6 @@ chatOptionsSelect.addEventListener("change", function() {
     .then(function(data) {
         // Gestisci la risposta dal server (puoi fare qualcosa qui, se necessario)
         console.log(data);
-
-        // Find the <a> element by its id
-        // var navbarLabel = document.getElementById("navbar-label");
-
-        // // Update the label based on the server response
-        // if (data === 'gpt-3.5-turbo-0613') {
-        //     navbarLabel.textContent = "LA2I";
-        //     navbarLabel.style.color = "black";
-        // } else {
-        //     navbarLabel.textContent = "LA2I*";
-        //     navbarLabel.style.color = "red";
-        // }
         
         var span_la = document.getElementById("span_la");
 
@@ -671,7 +659,6 @@ async function saveChatHistoryAsPDF() {
     }
 
     function addImage(doc, imageData) {
-        // Check if adding this image would exceed the page height
         doc.addPage();
         //doc.addImage(imageData, 'PNG', 10, 20, 200, 0,'','FAST');
         doc.addImage(imageData, 'PNG', 0, 20, 200, 0,'','FAST');
@@ -712,13 +699,36 @@ async function saveChatHistoryAsPDF() {
 
         // Iterate through chat history elements
         for (const element of chatHistory.children) {
-            //console.log(element.tagName)
             if (element.classList.contains("user-message") || element.classList.contains("assistant-message")) {
                 textContent = element.textContent.trim();
                 addText(doc, textContent);
             } else if (element.classList.contains("mindmap-image")) {
-                imageData = await getImageDataFromBase64(element.src);
+                imageData = getImageDataFromBase64(element.src);
                 addImage(doc, imageData);
+            } else if (element.classList.contains("json_network")) {
+                const json_data = element.textContent.trim();
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/mindmap_json_to_image', false); // The 'false' argument makes the request synchronous
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                try {
+                    xhr.send(JSON.stringify({ json_data: json_data }));
+
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        const image_content = atob(data.image_content);
+                        const uint8Array = new Uint8Array(image_content.length);
+                        for (let i = 0; i < image_content.length; i++) {
+                            uint8Array[i] = image_content.charCodeAt(i);
+                        }
+                
+                        addImage(doc, uint8Array);
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
+                } catch (error) {
+                    console.error('Error generating network image:', error);
+                }
             } else if (element.tagName === "IFRAME") {
                 const iframeContent = element.getAttribute('srcdoc');
                 generateHTMLIframe(fileHandle.name,iframeCounter,iframeContent)
@@ -922,6 +932,7 @@ function appendMessage(sender, message) {
             if (response.ok) {
                 const data = await response.json();
                 const htmlContent = data.html;
+                const json_string = data.json_string
 
                 const iframe = document.createElement("iframe");
 
@@ -935,6 +946,14 @@ function appendMessage(sender, message) {
 
                 const chatHistoryDiv = document.getElementById("chat-history");
                 chatHistoryDiv.appendChild(iframe);
+
+                const jsonElement = document.createElement("div");
+                jsonElement.style.display = "none";
+                jsonElement.textContent = json_string;
+                jsonElement.classList.add("json_network");
+
+                // Append the hidden element to chatHistory
+                chatHistoryDiv.appendChild(jsonElement);
 
             } else {
                 console.error("Error fetching mind map image");

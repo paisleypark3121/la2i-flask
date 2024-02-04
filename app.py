@@ -43,7 +43,7 @@ app.register_blueprint(filemanagement_blueprint)
 
 
 default_model='gpt-3.5-turbo-0613'
-default_physics=True
+default_physics=False
 #default_model='gpt-4-0613'
 
 @app.route("/")
@@ -271,7 +271,6 @@ def get_summary():
 
     return jsonify({"bot_response": bot_response})
     
-
 if __name__ == "__main__":
-    #app.run(debug=True)
-    app.run("0.0.0.0")
+    app.run(debug=True)
+    #app.run("0.0.0.0")
