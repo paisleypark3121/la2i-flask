@@ -10,6 +10,7 @@ import pdfplumber
 
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from chromadb_manager import *
 
 class TextColors:
     RESET = "\033[0m"
@@ -37,8 +38,9 @@ system_message="Il tuo ruolo è essere un assistente disponibile con un tono ami
     "[context] {context}"
 
 rolling = 10
-#model='gpt-3.5-turbo-0613'
-model='gpt-4-0613'
+model_name='gpt-3.5-turbo-0613'
+#model_name='gpt-4-0613'
+#model_name='ft:gpt-3.5-turbo-1106:personal::8UezGKAU'
 
 
 def set_messages(messages, rolling):
@@ -62,7 +64,6 @@ def set_messages(messages, rolling):
 
     return messages
 
-
 def do_chat():
 
     print(TextColors.RESET)
@@ -73,69 +74,70 @@ def do_chat():
 
     embedding=OpenAIEmbeddings()
     persist_directory='./vector_store/test'
-
     location="../files/il gufo.txt"
 
-    vectordb=create_vectordb(
+    vectordb=create_vectordb_from_location(
         location=location,
         embedding=embedding,
-        persist_directory=persist_directory)
-    #print(vectordb.get())    
-    retriever = vectordb.as_retriever()
+        model_name=model_name,
+        persist_directory=persist_directory,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap)
+    #retriever = vectordb.as_retriever()
 
-    client=OpenAI()
+    #client=OpenAI()
 
-    messages=[]
-    messages.append({"role":"system","content":system_message})
+    # messages=[]
+    # messages.append({"role":"system","content":system_message})
 
-    try:
-        print("\n***WELCOME***\n")
-        while True:
-            print(TextColors.BLUE)
-            user_message = input("\nUser: ")
-            print(TextColors.RESET)   
+    # try:
+    #     print("\n***WELCOME***\n")
+    #     while True:
+    #         print(TextColors.BLUE)
+    #         user_message = input("\nUser: ")
+    #         print(TextColors.RESET)   
             
-            messages.append({"role":"user","content":user_message})
+    #         messages.append({"role":"user","content":user_message})
         
-            #print(TextColors.CYAN)
-            #print(messages)
-            #print(TextColors.RESET)   
+    #         #print(TextColors.CYAN)
+    #         #print(messages)
+    #         #print(TextColors.RESET)   
 
-            #docs=retriever.get_relevant_documents(user_message)
-            docs=vectordb.similarity_search_with_relevance_scores(user_message)
+    #         #docs=retriever.get_relevant_documents(user_message)
+    #         docs=vectordb.similarity_search_with_relevance_scores(user_message)
 
-            #print(TextColors.GREEN)
-            #print(len(docs))
-            #print(docs)
-            #print(docs[0][0].page_content)
-            #print(docs[1][0].page_content)
-            result=docs[0][0].page_content+"\n\n"+docs[1][0].page_content
-            #print(TextColors.RESET)   
+    #         #print(TextColors.GREEN)
+    #         #print(len(docs))
+    #         #print(docs)
+    #         #print(docs[0][0].page_content)
+    #         #print(docs[1][0].page_content)
+    #         result=docs[0][0].page_content+"\n\n"+docs[1][0].page_content
+    #         #print(TextColors.RESET)   
 
-            updated_system_message=system_message.replace("{context}", result)
-            messages[0]["content"]=updated_system_message
+    #         updated_system_message=system_message.replace("{context}", result)
+    #         messages[0]["content"]=updated_system_message
             
-            #bot_response = "This is a fake bot response: "+user_message
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=0,
-                max_tokens=400,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
+    #         #bot_response = "This is a fake bot response: "+user_message
+    #         response = client.chat.completions.create(
+    #             model=model,
+    #             messages=messages,
+    #             temperature=0,
+    #             max_tokens=400,
+    #             top_p=1,
+    #             frequency_penalty=0,
+    #             presence_penalty=0
+    #         )
 
-            answer=response.choices[0].message.content
+    #         answer=response.choices[0].message.content
             
-            print(TextColors.RED)
-            print("Assistant: "+answer)
-            print(TextColors.RESET)   
+    #         print(TextColors.RED)
+    #         print("Assistant: "+answer)
+    #         print(TextColors.RESET)   
 
-            messages.append({"role": "assistant", "content": answer})            
-            messages = set_messages(messages,rolling)
+    #         messages.append({"role": "assistant", "content": answer})            
+    #         messages = set_messages(messages,rolling)
 
-    except KeyboardInterrupt:
-        print("BYE BYE!!!")
+    # except KeyboardInterrupt:
+    #     print("BYE BYE!!!")
 
 do_chat()        

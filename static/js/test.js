@@ -1,52 +1,44 @@
-document.addEventListener("DOMContentLoaded", function () {
+var mousePosition;
+var offset = [0, 0];
+var div;
+var isDown = false;
 
-    const mybutton = document.getElementById("mybutton");
+div = document.createElement("div");
+div.style.position = "absolute";
+div.style.left = "0px";
+div.style.top = "0px";
+div.style.width = "100px";
+div.style.height = "100px";
+div.style.background = "red";
+div.style.color = "blue";
 
-    mybutton.addEventListener("click", () => {
-  
-        window.jsPDF = window.jspdf.jsPDF;
+document.body.appendChild(div);
 
-        var doc = new jsPDF({
-            orientation: 'p', 
-            unit: 'mm', 
-            format: 'a4',
-            compress: 'true'
-            //format: [canvas.width, canvas.height] // set needed dimensions for any element
-        });
+div.addEventListener('mousedown', function(e) {
+  isDown = true;
+  console.log("DOWN")
+  offset = [
+    div.offsetLeft - e.clientX,
+    div.offsetTop - e.clientY
+  ];
+}, true);
 
-        fetch('/test_content', {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-        })
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          } else {
-              throw new Error('Network response was not ok');
-          }
-        })
-        .then(data => {
-            // Decode the base64 string back into bytes
-            const image_content = atob(data.image_content);
-            
-            // Create a Uint8Array from the decoded bytes
-            const uint8Array = new Uint8Array(image_content.length);
-            for (let i = 0; i < image_content.length; i++) {
-                uint8Array[i] = image_content.charCodeAt(i);
-            }
+document.addEventListener('mouseup', function() {
+  isDown = false;
+  console.log("UP")
+}, true);
 
-            doc.addPage();
-            doc.addImage(uint8Array, 'PNG', 0, 20, 200, 0, '', 'FAST');
-            
-            doc.save("test.pdf");
-        })
-        .catch(error => {
-            console.error('Error generating network image:', error);
-        });
+document.addEventListener('mousemove', function(event) {
+  event.preventDefault();
+  if (isDown) {
+    console.log("MOVE DOWN")
+    mousePosition = {
 
-        
+      x: event.clientX,
+      y: event.clientY
 
-    })
-})
+    };
+    div.style.left = (mousePosition.x + offset[0]) + 'px';
+    div.style.top = (mousePosition.y + offset[1]) + 'px';
+  }
+}, true);

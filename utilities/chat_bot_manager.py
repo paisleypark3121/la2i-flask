@@ -1,5 +1,7 @@
+import json
 from openai import OpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.retrievers import WikipediaRetriever
 
 system_message_en="Your role is to be a helpful assistant with a friendly, "\
     "understanding, patient, and user-affirming tone. You should: "\
@@ -112,7 +114,10 @@ class ChatBotManager:
         
         if self.vectordb:
             docs=self.vectordb.similarity_search_with_relevance_scores(user_message)
-            result=docs[0][0].page_content+"\n\n"+docs[1][0].page_content
+            print("docs: "+str(len(docs)))
+            result=docs[0][0].page_content
+            if len(docs)>1:
+                result=result+"\n\n"+docs[1][0].page_content
             updated_system_message=self.system_message.replace("{context}", result)
             self.messages[0]["content"]=updated_system_message
         #print(self.messages)
@@ -132,3 +137,26 @@ class ChatBotManager:
         self.messages.append({"role": "assistant", "content": answer})
         self.messages = set_messages(self.messages,self.rolling)
         return answer
+
+    def handle_wiki(self, user_message):
+        self.messages.append({"role": "user", "content": user_message})
+        
+        retriever = WikipediaRetriever()
+        docs = retriever.get_relevant_documents(user_message)
+
+        answer=docs[0].metadata['summary'][:20]
+
+        # print(docs[0].page_content[:20])
+        # print(docs[0].metadata['title'])
+        # print(docs[0].metadata['summary'][:20])
+        # print(docs[0].metadata['source'])
+
+        self.messages.append({"role": "assistant", "content": answer})
+        self.messages = set_messages(self.messages,self.rolling)
+        
+        titles_sources = [[doc.metadata['title'], doc.metadata['source']] for doc in docs]
+        data = {
+            "answer": answer,
+            "titles_sources": titles_sources
+        }
+        return json.dumps(data)

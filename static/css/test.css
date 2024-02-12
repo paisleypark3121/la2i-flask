@@ -1,0 +1,76 @@
+#chat-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000; /* Ensure it floats above other content */
+}
+
+#open-chat {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 25%;
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+}
+
+#chat-interface {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 300px; /* Default width */
+    height: 400px; /* Default height */
+    border: 1px solid #ddd;
+    background-color: white;
+    z-index: 1001;
+    flex-direction: column;
+}
+
+#chat-interface.expanded {
+    width: 100%; /* Fit the full width of the page */
+    height: 100vh; /* Extend in height to reach the top of the viewport */
+    bottom: 0; /* Align to the bottom of the viewport */
+    right: 0; /* Align to the right of the viewport (if you want it to fully cover the screen width) */
+}
+
+#chat-header {
+    display: flex; /* Use Flexbox */
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* This places the first item at the start and the last item at the end */
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+}
+
+#chat-header h2 {
+    margin: 0; /* Remove default margin of h2 */
+}
+
+#resize-chat {
+    cursor: pointer; /* To indicate it's clickable */
+}
+
+#chat-body {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+#chat-input {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px;
+}
+
+#send-message {
+    margin: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 18px;
+}

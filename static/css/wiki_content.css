@@ -1,0 +1,152 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+}
+
+/* Font style for OpenDyslexic */
+body.dyslexic {
+    font-family: 'OpenDyslexic', sans-serif;
+    font-size: 24px;
+}
+
+/* CSS styles for user messages */
+.user-message {
+    text-align: left;
+    padding: 5px;
+    margin: 10px 0;
+    background-color: #cce8f4; /* Set a background color for user messages */
+}
+
+/* CSS styles for bot messages */
+.assistant-message {
+    text-align: left;
+    padding: 5px;
+    margin: 10px 0;
+    background-color: #eaffd9; /* Set a different background color for assistant messages */
+}
+
+.mindmap-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.text-to-speech-button {
+    height: 34px;
+}
+
+.mindmap-button {
+    margin-left: 10px;
+    height: 34px;
+}
+
+.mindmap2-button {
+    margin-left: 10px;
+    height: 34px;
+}
+
+#chat-history {
+    max-height: 24vh;
+    overflow-y: auto; 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+}
+
+#chat-history.expanded {
+    max-height: 54vh;
+    overflow-y: auto; 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+}
+
+.form-control {
+    resize: none;
+}
+
+#chat-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+#open-chat {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 25%;
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+}
+
+/* Default size */
+#chat-interface {
+    display: none;
+    /* #position: fixed; */
+    position: absolute; 
+    bottom: 80px;
+    right: 20px;
+    width: 60vh;
+    height: 400px;
+    border: 1px solid #ddd;
+    background-color: white;
+    z-index: 1001;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Expanded size */
+#chat-interface.expanded {
+    width: 80%;
+    height: 80vh;
+    /* height: 80%; */
+    bottom: 80px;
+    right: 40px;
+}
+
+
+#chat-header {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+}
+
+#chat-header h2 {
+    margin: 0;
+}
+
+#chat-default-position {
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#resize-chat {
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+
+#chat-body {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+#chat-input {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px;
+}
+
+#send-message {
+    margin: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 18px;
+}

@@ -13,6 +13,9 @@ from routes.credentials_routes import credentials_blueprint
 from routes.test_routes import test_blueprint
 from routes.mindmap_routes import mindmap_blueprint
 from routes.filemanagement_routes import filemanagement_blueprint
+from routes.yla_routes import yla_blueprint
+from routes.content_routes import content_blueprint
+from routes.wikichat_routes import wikichat_blueprint
 
 from langchain.embeddings import OpenAIEmbeddings
 from utilities.chat_bot_manager import *
@@ -40,6 +43,9 @@ app.register_blueprint(credentials_blueprint)
 app.register_blueprint(test_blueprint)
 app.register_blueprint(mindmap_blueprint)
 app.register_blueprint(filemanagement_blueprint)
+app.register_blueprint(yla_blueprint)
+app.register_blueprint(content_blueprint)
+app.register_blueprint(wikichat_blueprint)
 
 
 default_model='gpt-3.5-turbo-0613'
@@ -49,23 +55,47 @@ default_physics=False
 @app.route("/")
 def home():
     if 'user_id' in session:
+        
         model = session.get("model")
         if model is None:
             model = default_model
             session["model"] = model
+
         language = session.get("language")
         if language is None:
             language = 'english'
             session["language"] = language
+
         physics=session.get("physics")
         if physics is None:
             physics = default_physics
             session["physics"] = physics
+
+        contentId = request.args.get('contentId')
+        if contentId:
+            contentId=handle_content(contentId)
+        
         print(model)
         print(language)
-        return render_template("chat.html", model=model, language=language, physics=physics)
+        print(contentId)
+
+        if contentId:
+            #print("present")
+            return render_template(
+                "chat.html", 
+                model=model, 
+                language=language, 
+                physics=physics,
+                contentId=contentId)
+        else:
+            #print("not present")
+            return render_template(
+                "chat.html", 
+                model=model, 
+                language=language, 
+                physics=physics)
     else:
-        return redirect(url_for("auth.login"))  # Use the blueprint name for redirect
+        return redirect(url_for("auth.login"))
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -125,6 +155,11 @@ def generate_chromadb():
     user_id = session.get("user_id")
     if user_id is None:
         return jsonify({"error": "User not authenticated"}), 401
+
+    model = session.get("model")
+    if model is None:
+        model = default_model
+        session["model"] = model
         
     contents=""
 
@@ -151,10 +186,18 @@ def generate_chromadb():
 
     embeddings=OpenAIEmbeddings()
     persist_directory='./vector_store/'+user_id
-    vectordb = create_vectordb_from_content(
+    # vectordb = create_vectordb_from_content(
+    #     content=content,
+    #     embedding=embeddings,
+    #     persist_directory=persist_directory)
+    vectordb = create_vectordb_from_text(
         content=content,
         embedding=embeddings,
-        persist_directory=persist_directory)
+        model_name=model,
+        persist_directory=persist_directory,
+        # chunk_size=500,
+        # chunk_overlap=50
+        )
     #retriever = vectordb.as_retriever()
     if vectordb is None:
         return jsonify({"success": False, "message": "Error in creating vectordb"}), 200
@@ -271,6 +314,16 @@ def get_summary():
 
     return jsonify({"bot_response": bot_response})
     
+def handle_content(contentId):
+    # persist_directory='./vector_store/store_'+contentId
+    # embedding=OpenAIEmbeddings()
+    # vectordb=get_vectordb(persist_directory,embedding)
+    # if vectordb is None:
+    #     return None
+    # session["retriever"] = persist_directory
+    # return contentId
+    return 123
+
 if __name__ == "__main__":
     app.run(debug=True)
     #app.run("0.0.0.0")

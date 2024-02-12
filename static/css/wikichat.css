@@ -10,18 +10,26 @@ body.dyslexic {
     font-size: 24px;
 }
 
+/* * {
+    font-family: 'OpenDyslexic', sans-serif;
+    font-size: 24px;
+  } */
+
+/* CSS styles for user messages */
 .user-message {
     text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #cce8f4; 
+    background-color: #cce8f4; /* Set a background color for user messages */
 }
 
+
+/* CSS styles for bot messages */
 .assistant-message {
     text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #eaffd9; 
+    background-color: #eaffd9; /* Set a different background color for assistant messages */
 }
 
 .mindmap-image {
@@ -43,6 +51,7 @@ body.dyslexic {
     height: 34px;
 }
 
+/* CSS styles for the chat history container */
 .chat-history {
     max-height: 500px;
     overflow-y: auto; 
@@ -66,27 +75,38 @@ body.dyslexic {
     margin-bottom: 10px;
 }
 
+/* .content-loaded-message {
+    display: none;
+    text-align: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+} */
+
+
 .chat-options-section {
-    background-color: #f0fafe; 
+    background-color: #f0fafe; /* Light gray background color */
     padding: 15px;
-    border: 1px solid #ccc; 
-    border-radius: 10px; 
+    border: 1px solid #ccc; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
     margin-bottom: 20px;
 }
 
 .add-section {
-    border: 1px solid; 
-    border-radius: 10px; 
+    border: 1px solid; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
     padding: 15px;
     margin-bottom: 20px;
 }
 
+/* CSS styles for the Add Files section */
 .add-files-section {
     background-color: #e7f2f6;
     padding: 15px;
     margin-bottom: 20px;
 }
 
+/* CSS styles for the Add URL section */
 .add-url-section {
     background-color: #daeff7;
     padding: 15px;
@@ -94,8 +114,8 @@ body.dyslexic {
 }
 
 .item-list-section {
-    border: 1px solid; 
-    border-radius: 10px;
+    border: 1px solid; /* Add a border */
+    border-radius: 10px; /* Add rounded corners */
     padding: 15px;
     background-color: #cce8f3;
     padding: 15px;
@@ -126,12 +146,37 @@ ul li a {
     color: #333;
 }
 
+/* ul li ul.submenu {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+ul li:hover ul.submenu {
+    display: block;
+}
+
+ul li ul.submenu li {
+    display: block;
+}
+
+ul li ul.submenu li a {
+    padding: 10px;
+    display: block;
+}
+
+ul li ul.submenu li a:hover {
+    background-color: #f2f2f2;
+} */
+
+/* Style for vertical list items */
 .vertical-list {
-    list-style-type: none; 
-    padding: 0; 
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
 }
 
 .vertical-list li {
-    display: block; 
-    margin-bottom: 5px; 
+    display: block; /* Display items as block elements */
+    margin-bottom: 5px; /* Add some spacing between items */
 }
