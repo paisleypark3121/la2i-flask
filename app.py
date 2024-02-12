@@ -22,6 +22,7 @@ from utilities.chat_bot_manager import *
 from utilities.chromadb_manager import *
 #from utilities.FAISS_manager import *
 from utilities.summarize_manager import *
+from utilities.content_manager import *
 
 from urllib.parse import urlparse
 from utilities.credentials import *
@@ -73,13 +74,13 @@ def home():
 
         contentId = request.args.get('contentId')
         if contentId:
-            contentId=handle_content(contentId)
+            handle_content_result=handle_content(contentId)
         
         print(model)
         print(language)
         print(contentId)
 
-        if contentId:
+        if handle_content_result:
             #print("present")
             return render_template(
                 "chat.html", 
@@ -315,14 +316,17 @@ def get_summary():
     return jsonify({"bot_response": bot_response})
     
 def handle_content(contentId):
-    # persist_directory='./vector_store/store_'+contentId
-    # embedding=OpenAIEmbeddings()
-    # vectordb=get_vectordb(persist_directory,embedding)
-    # if vectordb is None:
-    #     return None
-    # session["retriever"] = persist_directory
-    # return contentId
-    return 123
+    persist_directory='./vector_store/store_'+contentId
+    response=get_vectorstore(
+        contentId=contentId,
+        persist_directory=persist_directory
+    )
+
+    if response:
+        session["retriever"] = persist_directory
+        return True
+    
+    return False
 
 if __name__ == "__main__":
     app.run(debug=True)
