@@ -3,6 +3,7 @@ import wikipedia
 from Wikipedia2PDF import Wikipedia2PDF
 from bs4 import BeautifulSoup
 from pylatexenc.latex2text import LatexNodes2Text
+from utilities.chromadb_manager import *
 
 ''' Extracts all latex tags from the wikipedia page '''
 def extract_tags(content):
@@ -39,8 +40,8 @@ def remove_rows_before_tag(content, tag):
 def wiki_search(topic):
     try:
         return wikipedia.search(topic)
-    except e:
-        print("error in searching "+topic+" from wikipedia")
+    except Exception as e:
+        print("error in searching "+topic+" from wikipedia: "+str(e))
         return None
 
 ''' 
@@ -54,12 +55,13 @@ please note that the url is simply the title with _ instead of blanks
 def wiki_page(title):
     try:
         return wikipedia.page(title)
-    except e:
-        print("error in retrieving page "+title+" from wikipedia")
+    except Exception as e:
+        print("error in retrieving page "+title+" from wikipedia: "+str(e))
         return None
 
 '''
 Returns the text with simple text replacing latex
+content is the textual content from page.content
 '''
 def wiki_content_text(content):
 
@@ -88,14 +90,25 @@ def wiki_content_text(content):
 '''
 Returns the persist_directory for the chromadb associated to the wiki page with give title
 '''
-def wiki_page2chromadb(title):
+def wiki_page2chromadb(title,contentId,embedding,chunk_size,chunk_overlap):
+
     page=get_page(title)
     if page is None:
         return None
 
     content=wiki_content_text(page.content)
+    persist_directory="/vector_store/store_"+str(contentId)
     
-    persist_directory="/vector_store/wiki_123"
+    vectordb=create_vectordb_from_content(
+        content=content,
+        embedding=embedding,
+        persist_directory=persist_directory,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap)
+    
+    if vectordb is None:
+        return None
+    
     return persist_directory
 
 def test():
@@ -111,14 +124,14 @@ def test():
     content_text=wiki_content_text(response.content)
     print(content_text)
 
-def test_annotations():
-    topic = wikipedia.page('kinetic energy')
-    equations = BeautifulSoup(topic.html(),'lxml').find_all('annotation')
-    print(equations[0].text)
-    text = LatexNodes2Text().latex_to_text(equations[0].text)
-    print(text)
+# def test_annotations():
+#     topic = wikipedia.page('kinetic energy')
+#     equations = BeautifulSoup(topic.html(),'lxml').find_all('annotation')
+#     print(equations[0].text)
+#     text = LatexNodes2Text().latex_to_text(equations[0].text)
+#     print(text)
 
-def test_wiki2pdf():
+# def test_wiki2pdf():
     url = "https://it.m.wikipedia.org/wiki/Moto_rettilineo"
     output_path = "pagina_di_esempio.pdf"
     Wikipedia2PDF(url, filename=output_path)

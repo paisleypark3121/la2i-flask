@@ -11,7 +11,7 @@ default_model='gpt-3.5-turbo-0613'
 default_physics=False
 
 wiki_content_data = [
-    {"id": 1, "title": "Wiki Content 1", "description": "Description for Wiki Content 1"},
+    {"id": 1, "title": "Moto rettilineo", "description": "In  fisica,  il  moto  rettilineo  è  un  moto  in  cui  il  corpo  considerato  come  punto  materiale  si  muove mantenendo una direzione costante: un esempio intuitivo è quello di un'automobile che viaggia lungo una strada dritta, ossia un moto la cui direzione coincide costantemente con la retta sulla quale il corpo si sposta. [...]"},
     {"id": 2, "title": "Wiki Content 2", "description": "Description for Wiki Content 2"},
     {"id": 3, "title": "Wiki Content 3", "description": "Description for Wiki Content 3"}
 ]

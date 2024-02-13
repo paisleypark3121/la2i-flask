@@ -72,6 +72,7 @@ def home():
             physics = default_physics
             session["physics"] = physics
 
+        handle_content_result=False
         contentId = request.args.get('contentId')
         if contentId:
             handle_content_result=handle_content(contentId)
