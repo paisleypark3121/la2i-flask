@@ -1,6 +1,6 @@
 import re
 import wikipedia
-from Wikipedia2PDF import Wikipedia2PDF
+#from Wikipedia2PDF import Wikipedia2PDF
 from bs4 import BeautifulSoup
 from pylatexenc.latex2text import LatexNodes2Text
 from utilities.chromadb_manager import *
