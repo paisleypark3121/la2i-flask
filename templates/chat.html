@@ -16,12 +16,12 @@
             LA2I
         </a> -->
         <a id="navbar-label" class="navbar-brand" href="#">
-            <img src="../images/logo.png" width="50" height="50" class="d-inline-block align-top" alt="Small Logo">
-            {% if "personal" not in model %}
+            <img src="../images/DyslexIA.png" height="50" class="d-inline-block align-top" alt="Small Logo">
+            <!-- {% if "personal" not in model %}
                 <span id="span_la" style="color: black;">LA2I</span>
             {% else %}
                 <span id="span_la" style="color: red;">LA2I*</span>
-            {% endif %}
+            {% endif %} -->
 
         </a>
         
@@ -31,12 +31,12 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle text" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         USER
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item text-success" href="#" id="settings-menu">Settings</a></li>
-                        <li><a class="dropdown-item text-danger" href="#" id="logout-link">Logout</a></li>
+                        <li><a class="dropdown-item text" href="#" id="settings-menu">Settings</a></li>
+                        <li><a class="dropdown-item text" href="#" id="logout-link">Logout</a></li>
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -56,7 +56,7 @@
         <div class="modal-content">
             <div class="modal-body">
             <div class="d-flex justify-content-center">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border text" role="status">
                 <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
@@ -103,13 +103,13 @@
                 <label id="label_url_input" for="url-input">Type the URL:</label>
                 <input type="text" class="form-control" id="url-input" placeholder="Type the URL">
             </div>
-            <button class="btn btn-primary" id="add-button">Add</button>
+            <button class="btn btn-outline" id="add-button">Add</button>
         </div>
 
         <div id="item-list-section" class="item-list-section">
             <h6 id="heading_item_list">Item List</h6>
             <ul id="item-list" class="list-group vertical-list"></ul>
-            <button class="btn btn-success generate-button" id="generate-button">Generate</button>
+            <button class="btn btn-outline-dark generate-button" id="generate-button">Generate</button>
         </div>
     </div>
     
@@ -118,7 +118,7 @@
         <!-- <div id="content-loaded-container" class="content-loaded-container"> -->
         <div id="content-loaded-container" class="content-loaded-container" {% if contentId %}style="display: block;"{% endif %}>
             <label id="content-loaded-message" class="content-loaded-message">CONTEXT BASED</label>
-            <button type="button" class="btn btn-secondary" id="sticky-button" class="content-loaded-button">
+            <button type="button" class="btn btn-outline-secondary" id="sticky-button" class="content-loaded-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-stickies" viewBox="0 0 16 16">
                   <path d="M1.5 0A1.5 1.5 0 0 0 0 1.5V13a1 1 0 0 0 1 1V1.5a.5.5 0 0 1 .5-.5H14a1 1 0 0 0-1-1z"/>
                   <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v11A1.5 1.5 0 0 0 3.5 16h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 16 9.586V3.5A1.5 1.5 0 0 0 14.5 2zM3 3.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5V9h-4.5A1.5 1.5 0 0 0 9 10.5V15H3.5a.5.5 0 0 1-.5-.5zm7 11.293V10.5a.5.5 0 0 1 .5-.5h4.293z"/>
@@ -127,8 +127,8 @@
         </div>
         <div class="row">
             <div class="col">
-                <button class="btn btn-danger mb-2" id="clear-history-button" disabled>Clear</button>
-                <button class="btn btn-success mb-2" id="save-history-button" disabled>Save</button>
+                <button class="btn btn-outline-dark mb-2" id="clear-history-button" disabled>Clear</button>
+                <button class="btn btn-outline-dark mb-2" id="save-history-button" disabled>Save</button>
                 <div id="chat-history" class="chat-history">
                     <div id="hint-text" class="hint-text">Chat history appears here</div>
                 </div>
@@ -141,13 +141,13 @@
                         <div class="form-group">
                             <textarea class="form-control" id="user-message" placeholder="Type your message..." rows="4"></textarea>
                         </div>
-                        <button type="button" class="btn btn-secondary" id="mic-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-mic" viewBox="0 0 16 16">
+                        <button type="button" class="btn btn-outline-secondary" id="mic-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="24" fill="currentColor" class="bi bi-mic" viewBox="0 0 16 16">
                                 <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5"/>
                                 <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3"/>
                             </svg>
                         </button>                        
-                        <button type="submit" class="btn btn-primary" id="send-button">Send</button>
+                        <button type="submit" class="btn btn-outline-secondary" id="send-button">Send</button>
                     </form>
                 </div>
             </div>

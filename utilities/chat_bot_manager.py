@@ -105,9 +105,12 @@ class ChatBotManager:
         self.temperature = 0
         self.vectordb = vectordb
 
-        if self.messages is None:
+        if self.messages is None or self.messages==[]:
             #print("SET SYSTEM")
             self.messages = [{"role": "system", "content": self.system_message}]
+        
+        #print("INIT")
+        #print(self.messages)
         
     def handle_message(self, user_message):
         self.messages.append({"role": "user", "content": user_message})
@@ -120,7 +123,8 @@ class ChatBotManager:
                 result=result+"\n\n"+docs[1][0].page_content
             updated_system_message=self.system_message.replace("{context}", result)
             self.messages[0]["content"]=updated_system_message
-        #print(self.messages)
+        print("MESSAGES")
+        print(self.messages)
         #bot_response = "This is a fake bot response: "+user_message
         response = self.client.chat.completions.create(
             model=self.model,

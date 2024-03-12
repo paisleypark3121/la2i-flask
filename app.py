@@ -77,6 +77,9 @@ def home():
         if contentId:
             handle_content_result=handle_content(contentId)
         
+        session['messages'] = []
+        session['retriever'] = None
+
         print(model)
         print(language)
         print(contentId)

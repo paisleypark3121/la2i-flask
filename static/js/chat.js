@@ -1,5 +1,6 @@
 let voices=[]
 let selectedVoice = null;
+const recognition = new webkitSpeechRecognition();
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -16,6 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
         document.body.classList.remove('dyslexic');
     }
 
+    selectedLanguage="en-US"
+    if (settingOptionsSelect.value=="italian")
+        selectedLanguage="it-IT"            
+    recognition.lang=selectedLanguage;
 
     //#region tippy
     tippy('#clear-history-button', {
@@ -29,7 +34,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     tippy('#mic-button', {
-        content: 'speech to text',
+        content: settingOptionsSelect.value === 'italian' ? 'parla' : 'speech to text',
+        //content: 'speech to text',        
         delay: [2000, 0]
     });
 
@@ -59,6 +65,21 @@ document.addEventListener("DOMContentLoaded", function () {
         if (settingSection.style.display !== "none") {
             settingSection.style.display = "none";
         }
+    });
+
+    const textarea = document.getElementById('user-message');
+    const navbarCollapse = document.getElementById('navbarNav');
+    const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+        toggle: false 
+    });
+
+    textarea.addEventListener('focus', function() {
+        bsCollapse.hide();
+
+        const chatSection = document.getElementById("chat-section");
+        chatSection.style.display = "none";
+        const settingSection = document.getElementById("setting-section");
+        settingSection.style.display = "none";
     });
 
     const userMessageInput = document.getElementById("user-message");
@@ -259,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Add a button to remove the item from the list
         const removeButton = document.createElement("button");
         removeButton.textContent = "Remove";
-        removeButton.classList.add("btn", "btn-danger", "remove-item-from-list"); 
+        removeButton.classList.add("btn", "btn-outline-dark", "remove-item-from-list"); 
         removeButton.addEventListener("click", function () {
             const index = items.findIndex((x) => x.data === item);
             if (index !== -1) {
@@ -341,29 +362,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const uploadProgress = document.getElementById("upload-progress");
     const progressBar = uploadProgress.querySelector(".progress-bar");
 
-    // Initialize SpeechRecognition API
-    const recognition = new webkitSpeechRecognition();
-    // Initialize a variable to track the state of speech recognition
     let isRecognitionActive = false;
-
-    // Add an event listener for the microphone button
     document.getElementById("mic-button").addEventListener("click", function () {
         if (isRecognitionActive) {
-            // If recognition is active, stop it
             recognition.stop();
             isRecognitionActive = false;
-            // Change the button text and style to indicate that it's not listening
-            document.getElementById("mic-button").textContent = "Start Microphone";
-            document.getElementById("mic-button").classList.remove("btn-danger");
-            document.getElementById("mic-button").classList.add("btn-secondary");
+
+            text_mic="Start Microphone"
+            if (settingOptionsSelect.value=="italian")
+                text_mic="Avvia il microfono"
+            document.getElementById("mic-button").textContent = text_mic;
+            document.getElementById("mic-button").classList.remove("btn-outline-dark");
+            document.getElementById("mic-button").classList.add("btn-outline-secondary");
         } else {
-            // If recognition is not active, start it
             recognition.start();
             isRecognitionActive = true;
-            // Change the button text and style to indicate that it's listening
-            document.getElementById("mic-button").textContent = "Stop Microphone";
-            document.getElementById("mic-button").classList.remove("btn-secondary");
-            document.getElementById("mic-button").classList.add("btn-danger");
+            
+            text_mic="Stop Microphone"
+            if (settingOptionsSelect.value=="italian")
+                text_mic="Ferma il microfono"
+            document.getElementById("mic-button").textContent = text_mic;
+            document.getElementById("mic-button").classList.remove("btn-outline-secondary");
+            document.getElementById("mic-button").classList.add("btn-outline-dark");
         }
     });
 
@@ -381,10 +401,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // Handle end of recognition (when user stops speaking)
     recognition.addEventListener("end", () => {
         isRecognitionActive = false;
-        // Change the button text and style to indicate that it's not listening
-        document.getElementById("mic-button").textContent = "Start Microphone";
-        document.getElementById("mic-button").classList.remove("btn-danger");
-        document.getElementById("mic-button").classList.add("btn-secondary");
+        text_mic="Start Microphone"
+        if (settingOptionsSelect.value=="italian")
+            text_mic="Avvia il microfono"
+        document.getElementById("mic-button").textContent = text_mic;
+
+        document.getElementById("mic-button").textContent = text_mic;
+        document.getElementById("mic-button").classList.remove("btn-outline-dark");
+        document.getElementById("mic-button").classList.add("btn-outline-secondary");
     });
 
 });
@@ -458,15 +482,15 @@ chatOptionsSelect.addEventListener("change", function() {
     .then(function(data) {
         console.log(data);
         
-        var span_la = document.getElementById("span_la");
+        // var span_la = document.getElementById("span_la");
 
-        if (data === 'gpt-3.5-turbo-0613') {
-            span_la.textContent = "LA2I";
-            span_la.style.color = "black";
-        } else {
-            span_la.textContent = "LA2I*";
-            span_la.style.color = "red";
-        }
+        // if (data === 'gpt-3.5-turbo-0613') {
+        //     span_la.textContent = "LA2I";
+        //     span_la.style.color = "black";
+        // } else {
+        //     span_la.textContent = "LA2I*";
+        //     span_la.style.color = "red";
+        // }
     })
     .catch(function(error) {
         console.error(error);
@@ -475,11 +499,8 @@ chatOptionsSelect.addEventListener("change", function() {
 
 var settingOptionsSelect = document.getElementById("setting-options");
 settingOptionsSelect.addEventListener("change", function() {
-    //console.log("CHANGE")
-    // Ottieni il valore dell'opzione selezionata
     var selectedValue = settingOptionsSelect.value;
 
-    // Configura l'oggetto di opzioni per la richiesta Fetch
     var requestOptions = {
         method: "POST",
         body: JSON.stringify({ option: selectedValue }),
@@ -488,7 +509,6 @@ settingOptionsSelect.addEventListener("change", function() {
         }
     };
 
-    // Esegui la richiesta Fetch
     fetch("/update_language", requestOptions)
     .then(function(response) {
         if (!response.ok) {
@@ -500,7 +520,13 @@ settingOptionsSelect.addEventListener("change", function() {
         selectedLanguage = selectedValue;
         selectVoiceByLanguage(selectedValue);
         set_labels(selectedLanguage)
-        console.log(data);
+        console.log("update language: "+data);
+
+        selectedLanguage="en-US"
+        if (settingOptionsSelect.value=="italian")
+            selectedLanguage="it-IT"            
+        recognition.lang=selectedLanguage;
+        console.log("update recognition: "+selectedLanguage);
     })
     .catch(function(error) {
         // Gestisci eventuali errori qui
@@ -627,6 +653,8 @@ async function saveChatHistoryAsPDF() {
         //format: [canvas.width, canvas.height] // set needed dimensions for any element
     });
 
+    // Set font size to 14
+    doc.setFontSize(14);
     line_height=doc.internal.getLineHeight() * 0.3527777778
     
     function addEmptyLine(doc) {
@@ -687,7 +715,7 @@ async function saveChatHistoryAsPDF() {
         const iframeStream = await iframeWritableStream.createWritable();
         await iframeStream.write(iframeBlob);
         await iframeStream.close();      
-        alert("Map for "+iframeFileName+" saved as PDF successfully!");      
+        //alert("Map for "+iframeFileName+" saved as PDF successfully!");      
     }
 
     try {
@@ -709,7 +737,6 @@ async function saveChatHistoryAsPDF() {
         const chatHistory = document.getElementById("chat-history");
 
         let iframeCounter=1
-
         // Iterate through chat history elements
         for (const element of chatHistory.children) {
             if (element.classList.contains("user-message") || element.classList.contains("assistant-message")) {
@@ -719,29 +746,29 @@ async function saveChatHistoryAsPDF() {
                 imageData = getImageDataFromBase64(element.src);
                 addImage(doc, imageData);
             } else if (element.classList.contains("json_network")) {
-                const json_data = element.textContent.trim();
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/mindmap_json_to_image', false); // The 'false' argument makes the request synchronous
-                xhr.setRequestHeader('Content-Type', 'application/json');
+                // const json_data = element.textContent.trim();
+                // const xhr = new XMLHttpRequest();
+                // xhr.open('POST', '/mindmap_json_to_image', false); // The 'false' argument makes the request synchronous
+                // xhr.setRequestHeader('Content-Type', 'application/json');
                 
-                try {
-                    xhr.send(JSON.stringify({ json_data: json_data }));
+                // try {
+                //     xhr.send(JSON.stringify({ json_data: json_data }));
 
-                    if (xhr.status === 200) {
-                        const data = JSON.parse(xhr.responseText);
-                        const image_content = atob(data.image_content);
-                        const uint8Array = new Uint8Array(image_content.length);
-                        for (let i = 0; i < image_content.length; i++) {
-                            uint8Array[i] = image_content.charCodeAt(i);
-                        }
+                //     if (xhr.status === 200) {
+                //         const data = JSON.parse(xhr.responseText);
+                //         const image_content = atob(data.image_content);
+                //         const uint8Array = new Uint8Array(image_content.length);
+                //         for (let i = 0; i < image_content.length; i++) {
+                //             uint8Array[i] = image_content.charCodeAt(i);
+                //         }
                 
-                        addImage(doc, uint8Array);
-                    } else {
-                        throw new Error('Network response was not ok');
-                    }
-                } catch (error) {
-                    console.error('Error generating network image:', error);
-                }
+                //         addImage(doc, uint8Array);
+                //     } else {
+                //         throw new Error('Network response was not ok');
+                //     }
+                // } catch (error) {
+                //     console.error('Error generating network image:', error);
+                // }
             } else if (element.tagName === "IFRAME") {
                 const iframeContent = element.getAttribute('srcdoc');
                 generateHTMLIframe(fileHandle.name,iframeCounter,iframeContent)
@@ -757,7 +784,11 @@ async function saveChatHistoryAsPDF() {
         await writableStream.close();
 
         // Display a success message
-        alert("Chat history saved as PDF successfully!");
+        text_message="Chat history saved as PDF successfully!"
+        var settingOptionsSelect = document.getElementById("setting-options");
+        if (settingOptionsSelect.value=="italian")
+            text_message="Conversazione salvata con successo"
+        alert(text_message);
     } catch (error) {
         console.error("Error saving PDF:", error);
     }
@@ -786,7 +817,10 @@ function clearHistory() {
     hintElement.id = "hint-text";
     hintElement.className = "hint-text";
     hintElement.textContent = "Chat history appears here";
-    chatHistory.appendChild(hintElement);
+    var settingOptionsSelect = document.getElementById("setting-options");
+    if (settingOptionsSelect.value=="italian")
+        hintElement.textContent="Lo storico dei messaggi apparirà qui"
+    chatHistory.appendChild(hintElement);    
 
     // const contentLoadedMessage = document.getElementById("content-loaded-message");
     // contentLoadedMessage.style.display = "none";
@@ -796,7 +830,11 @@ function clearHistory() {
 
 const clearHistoryButton = document.getElementById("clear-history-button");
 clearHistoryButton.addEventListener("click", () => {
-    const confirmed = window.confirm("Are you sure you want to clear the history?");
+    var settingOptionsSelect = document.getElementById("setting-options");
+    confirm_message="Are you sure you want to clear the history?"
+    if (settingOptionsSelect.value=="italian")
+        confirm_message="Sei sicuro di voler cancellare tutti i messaggi?"
+    const confirmed = window.confirm(confirm_message);
     if (confirmed) {
         fetch("/clear_history", {
             method: "POST",
@@ -903,7 +941,7 @@ function appendMessage(sender, message) {
 
     // Create a button element for text-to-speech
     const ttsButton = document.createElement("button");
-    ttsButton.className = "btn btn-primary text-to-speech-button";
+    ttsButton.className = "btn btn-outline-dark text-to-speech-button";
     const svgHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-speaker" viewBox="0 0 16 48">
             <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
@@ -913,7 +951,7 @@ function appendMessage(sender, message) {
     ttsButton.innerHTML = svgHTML;
 
     const mmButton = document.createElement("button");
-    mmButton.className = "btn btn-primary mindmap-button";
+    mmButton.className = "btn btn-outline-dark mindmap-button";
     const svg_mm_HTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-2-fill" viewBox="0 0 16 48">
         <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 5 7h2.5V6A1.5 1.5 0 0 1 6 4.5zm-3 8A1.5 1.5 0 0 1 4.5 10h1A1.5 1.5 0 0 1 7 11.5v1A1.5 1.5 0 0 1 5.5 14h-1A1.5 1.5 0 0 1 3 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 9 12.5z"/>
@@ -1008,7 +1046,7 @@ function appendMessage(sender, message) {
     });
 
     const mm2Button = document.createElement("button");
-    mm2Button.className = "btn btn-primary mindmap2-button";
+    mm2Button.className = "btn btn-outline-dark mindmap2-button";
     const svg_mm2_HTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="50" fill="currentColor" class="bi bi-diagram-3-fill" viewBox="0 0 16 48">
         <path fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zm-6 8A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm6 0A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm6 0a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>
@@ -1121,17 +1159,20 @@ function appendMessage(sender, message) {
         messageElement.appendChild(mm2Button);
 
         tippy(ttsButton, {
-            content: 'text to speech',
+            content: settingOptionsSelect.value === 'italian' ? 'leggi' : 'text to speech',
+            //content: 'text to speech',
             delay: [2000, 0]
         });
 
         tippy(mmButton, {
-            content: 'generate small concept map',
+            content: settingOptionsSelect.value === 'italian' ? 'genera una mappa concettuale compatta' : 'generate small concept map',
+            //content: 'generate small concept map',
             delay: [2000, 0]
         });
 
         tippy(mm2Button, {
-            content: 'generate large concept map',
+            content: settingOptionsSelect.value === 'italian' ? 'genera una mappa concettuale estesa' : 'generate large concept map',
+            //content: 'generate large concept map',
             delay: [2000, 0]
         });
         

@@ -14,14 +14,14 @@ body.dyslexic {
     text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #cce8f4; 
+    background-color: #EEEEEE; 
 }
 
 .assistant-message {
     text-align: left;
     padding: 5px;
     margin: 10px 0;
-    background-color: #eaffd9; 
+    background-color: #FFFDE7; 
 }
 
 .mindmap-image {
@@ -46,7 +46,7 @@ body.dyslexic {
 .chat-history {
     max-height: 500px;
     overflow-y: auto; 
-    border: 1px solid #ccc; 
+    border: 1px solid black; 
     padding: 10px;  
 }
 
@@ -67,7 +67,7 @@ body.dyslexic {
 }
 
 .chat-options-section {
-    background-color: #f0fafe; 
+    background-color: #f5f5f5; 
     padding: 15px;
     border: 1px solid #ccc; 
     border-radius: 10px; 
@@ -82,13 +82,13 @@ body.dyslexic {
 }
 
 .add-files-section {
-    background-color: #e7f2f6;
+    background-color: #f5f5f5;
     padding: 15px;
     margin-bottom: 20px;
 }
 
 .add-url-section {
-    background-color: #daeff7;
+    background-color: #f5f5f5;
     padding: 15px;
     margin-bottom: 20px;
 }
@@ -97,7 +97,7 @@ body.dyslexic {
     border: 1px solid; 
     border-radius: 10px;
     padding: 15px;
-    background-color: #cce8f3;
+    background-color: #f5f5f5;
     padding: 15px;
     margin-bottom: 20px;
     display: none;
@@ -124,6 +124,17 @@ ul li {
 ul li a {
     text-decoration: none;
     color: #333;
+}
+
+.form-group {
+    margin-top: 10px; 
+    margin-bottom: 10px; 
+    border: 1px solid black;
+}
+
+.form-group:focus {
+    border-color: #FFFDE7 !important;
+    outline: none;
 }
 
 .vertical-list {

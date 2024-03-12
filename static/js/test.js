@@ -1,44 +1,32 @@
-var mousePosition;
-var offset = [0, 0];
-var div;
-var isDown = false;
+function make_docx(){
+  const doc = new Document({
+    creator: "itsme.com",
+    description: 'Test di DOCX JS',
+    title: 'Test!'
+  });
 
-div = document.createElement("div");
-div.style.position = "absolute";
-div.style.left = "0px";
-div.style.top = "0px";
-div.style.width = "100px";
-div.style.height = "100px";
-div.style.background = "red";
-div.style.color = "blue";
+  paragraphTop = new Paragraph("Ciao!");
+  paragraphTop.heading1();
+  paragraphTop.center();
+  doc.addParagraph(paragraphTop);
 
-document.body.appendChild(div);
+  text = new TextRun("Paragrafo1");
+  paragraphTxt = new Paragraph();
+  paragraphTxt.justified();
+  paragraphTxt.addRun(text);
+  doc.addParagraph(paragraphTxt);
 
-div.addEventListener('mousedown', function(e) {
-  isDown = true;
-  console.log("DOWN")
-  offset = [
-    div.offsetLeft - e.clientX,
-    div.offsetTop - e.clientY
-  ];
-}, true);
+  paragraphTxt = new Paragraph();
+  doc.addParagraph(paragraphTxt);
 
-document.addEventListener('mouseup', function() {
-  isDown = false;
-  console.log("UP")
-}, true);
+  text = new TextRun("Paragrafo2");
+  paragraphTxt = new Paragraph();
+  paragraphTxt.justified();
+  paragraphTxt.addRun(text);
+  doc.addParagraph(paragraphTxt);
 
-document.addEventListener('mousemove', function(event) {
-  event.preventDefault();
-  if (isDown) {
-    console.log("MOVE DOWN")
-    mousePosition = {
-
-      x: event.clientX,
-      y: event.clientY
-
-    };
-    div.style.left = (mousePosition.x + offset[0]) + 'px';
-    div.style.top = (mousePosition.y + offset[1]) + 'px';
-  }
-}, true);
+  const packer = new Packer();
+  packer.toBlob(doc).then(blob => {
+      saveAs(blob, "file.docx");
+  });
+}
